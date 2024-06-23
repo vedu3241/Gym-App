@@ -21,7 +21,7 @@ class MembersScreen extends StatefulWidget {
 // updating code
 class _MembersScreenState extends State<MembersScreen> {
   //member Search Result
-  List<MemberData> _foundMembers = [];
+  // List<MemberData> _foundMembers = [];
   //Fetched list of members
   List<MemberModel> _members = [];
 
@@ -82,9 +82,9 @@ class _MembersScreenState extends State<MembersScreen> {
   void _displayMembersByStatus(String status) {
     List<MemberModel> result = [];
     if (status == 'Active') {
-      result = getActive(_members);
+      result = getActive(_mainList);
     } else {
-      result = getExpired(_members);
+      result = getExpired(_mainList);
     }
     setState(() {
       _members = result; //sort here if want
@@ -111,17 +111,18 @@ class _MembersScreenState extends State<MembersScreen> {
           .toList();
     }
 
-    // if (selectedMembershipPeriod.isNotEmpty) {
-    //   print(selectedMembershipPeriod);
-    //   // if (selectedMembershipPeriod == "All") {
-    //   //   searchResult = sortByDayRemaining(memberList);
-    //   // }
-    //   searchResult = searchResult
-    //       .where((element) => element.membershipPeriod
-    //           .toString()
-    //           .contains(selectedMembershipPeriod))
-    //       .toList();
-    // }
+    if (selectedMembershipPeriod.isNotEmpty) {
+      // print(selectedMembershipPeriod);
+      if (selectedMembershipPeriod == "All") {
+        searchResult = sortByDayRemaining(_mainList);
+      } else {
+        searchResult = searchResult
+            .where((element) => element.membershipPeriod
+                .toString()
+                .contains(selectedMembershipPeriod))
+            .toList();
+      }
+    }
 
     setState(() {
       _members = searchResult;

@@ -25,6 +25,7 @@ class MemberTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
+          
           border: obj.expired!
               ? Border.all(color: const Color(0xFFE72929))
               : Border.all(color: Colors.white),
