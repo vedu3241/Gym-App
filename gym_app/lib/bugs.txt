@@ -1,0 +1,11 @@
+UI BUGS{
+    - Fixed height in membersScreen/main Container
+}
+
+Code optimization{
+    membersScreen - defined the filter code inside the build method 
+}
+
+Functionality  BUGS{
+    Filter not working
+}
