@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -33,6 +34,25 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   final TextEditingController _fnameController = TextEditingController();
   final TextEditingController _lnameController = TextEditingController();
   final TextEditingController _phoneNumController = TextEditingController();
+  int amount = 100;
+  int calculateAmount(int months) {
+    // Example pricing logic, replace with your own
+    print(months);
+    switch (months) {
+      case 1:
+        return 100;
+      case 2:
+        return 180;
+      case 4:
+        return 250;
+      case 6:
+        return 300;
+      case 8:
+        return 350;
+      default:
+        return 200; // Default
+    }
+  }
 
   //Methods
   Future addMember() async {
@@ -62,10 +82,14 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
           gender: selectedRadio,
           medicalIssue: _medicalIssueController.text,
           membershipPeriod: _selectedPackage!,
+          amount: amount,
         );
 
         final Response res = await ApiService().addMember(member, imageFile!);
-        print(res);
+        final responseData = jsonDecode(res.body);
+        if (res.statusCode == 200) {
+          Navigator.pop(context);
+        }
       }
     } catch (err) {
       print(err);
@@ -192,6 +216,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String formattedAmount = amount.toString();
+
     return Scaffold(
       appBar: const MyAppBar(text: "New Member"),
       // backgroundColor: Colors.grey[200],
@@ -411,7 +437,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       DropdownButtonFormField<int>(
                         value: _selectedPackage,
                         decoration: const InputDecoration(
-                          labelText: "Packages",
+                          labelText: "Membership Duration",
                           labelStyle: TextStyle(
                               color: Colors.black,
                               fontSize: 18,
@@ -435,7 +461,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           return DropdownMenuItem<int>(
                             value: value,
                             child: Text(
-                              value.toString(),
+                              '${value.toString()} Month${value > 1 ? 's' : ''}',
                               style: const TextStyle(color: Colors.black),
                             ),
                           );
@@ -443,8 +469,35 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                         onChanged: (int? value) {
                           setState(() {
                             _selectedPackage = value!;
+                            amount = calculateAmount(value);
                           });
                         },
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      // Displaying amount
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            const Text(
+                              "Amount: ",
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w500),
+                            ),
+                            const Icon(
+                              Icons.currency_rupee,
+                              size: 20,
+                            ),
+                            Text(
+                              amount.toString(),
+                              style: const TextStyle(
+                                fontSize: 20,
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                       const SizedBox(
                         height: 10,
@@ -454,10 +507,10 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("Processing data")));
-                            // create modal and then call constructor here to store the data and then pass to API
-
+                              const SnackBar(
+                                content: Text("Processing data"),
+                              ),
+                            );
                             addMember();
                           }
                         },

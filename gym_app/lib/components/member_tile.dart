@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -13,19 +15,22 @@ class MemberTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String imgPath =
+        "C:/flutter_projects/Gym_app/gymApp_backend/profile_images/${obj.profileImg}";
+
     return InkWell(
       onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MemberProfile(
-              user: obj,
-            ),
-          )),
+        context,
+        MaterialPageRoute(
+          builder: (context) => MemberProfile(
+            user: obj,
+          ),
+        ),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          
           border: obj.expired!
               ? Border.all(color: const Color(0xFFE72929))
               : Border.all(color: Colors.white),
@@ -36,11 +41,13 @@ class MemberTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //profile image
+            // Image.file(File(imgPath), fit: BoxFit.cover)
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
-                'assets/icons/user_img.jpg',
-                height: 60,
+                "assets/icons/user_img.jpg",
+                height: 100,
+                width: 100,
               ),
             ),
             const SizedBox(

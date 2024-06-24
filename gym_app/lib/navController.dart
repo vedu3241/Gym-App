@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gym_app/Screens/homeScreen.dart';
 import 'package:gym_app/Screens/member_profile.dart';
 import 'package:gym_app/Screens/membersScreen.dart';
+import 'package:gym_app/Screens/settingsScreen.dart';
 
 class NavController extends StatefulWidget {
   const NavController({super.key});
@@ -17,6 +18,7 @@ class _NavControllerState extends State<NavController> {
   final List<Widget> _children = [
     const HomeScreen(),
     const MembersScreen(),
+    const SettingScreen()
   ];
 
   void _selectedPage(int index) {
@@ -39,6 +41,7 @@ class _NavControllerState extends State<NavController> {
         items: const [
           Icon(Icons.home),
           Icon(Icons.people),
+          Icon(Icons.settings)
           // Icon(Icons.calendar_month), //for any events
           // Icon(Icons.person),
         ],

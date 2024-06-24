@@ -33,7 +33,7 @@ class _MembersScreenState extends State<MembersScreen> {
   String _selectedPlanStatus = 'Active';
 
   //Available membershipPeriod
-  final List<String> membershipPeriod = ['All', '2', '4', '6', '8'];
+  final List<String> membershipPeriod = ['All', '1', '2', '4', '6', '8'];
   String selectedMembershipPeriod = 'All';
 
   // Function to sort member list by daysRemaining in ascending order
@@ -96,6 +96,19 @@ class _MembersScreenState extends State<MembersScreen> {
     // print(_mainList);
     List<MemberModel> searchResult = _mainList;
 
+    if (selectedMembershipPeriod.isNotEmpty) {
+      // print(selectedMembershipPeriod);
+      if (selectedMembershipPeriod == "All") {
+        searchResult = sortByDayRemaining(_mainList);
+      } else {
+        searchResult = searchResult
+            .where((element) => element.membershipPeriod
+                .toString()
+                .contains(selectedMembershipPeriod))
+            .toList();
+      }
+    }
+
     if (searchText.isNotEmpty) {
       searchResult = searchResult
           .where((element) =>
@@ -109,19 +122,6 @@ class _MembersScreenState extends State<MembersScreen> {
                   .toLowerCase()
                   .contains(searchText.toLowerCase()))
           .toList();
-    }
-
-    if (selectedMembershipPeriod.isNotEmpty) {
-      // print(selectedMembershipPeriod);
-      if (selectedMembershipPeriod == "All") {
-        searchResult = sortByDayRemaining(_mainList);
-      } else {
-        searchResult = searchResult
-            .where((element) => element.membershipPeriod
-                .toString()
-                .contains(selectedMembershipPeriod))
-            .toList();
-      }
     }
 
     setState(() {
@@ -217,7 +217,7 @@ class _MembersScreenState extends State<MembersScreen> {
                           child: DropdownButtonFormField(
                             value: selectedMembershipPeriod,
                             decoration: const InputDecoration(
-                              labelText: "Select Package",
+                              labelText: "Select Membeship",
                               labelStyle: TextStyle(
                                 color: Colors.white,
                               ),
@@ -252,15 +252,15 @@ class _MembersScreenState extends State<MembersScreen> {
                           ),
                         ),
                         const SizedBox(
-                          width: 10,
+                          width: 20,
                         ),
                         // Exprired members DD
                         SizedBox(
-                          width: 110,
+                          width: 115,
                           child: DropdownButtonFormField(
                             value: _selectedPlanStatus,
                             decoration: const InputDecoration(
-                              labelText: "Package Status",
+                              labelText: "Membership Status",
                               labelStyle: TextStyle(
                                 color: Colors.white,
                               ),

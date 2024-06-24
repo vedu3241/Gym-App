@@ -21,6 +21,7 @@ class ApiService {
     request.fields['gender'] = member.gender!;
     request.fields['medicalIssue'] = member.medicalIssue!;
     request.fields['membershipPeriod'] = member.membershipPeriod.toString();
+    request.fields['amount'] = member.amount.toString();
 
     request.files.add(
       await http.MultipartFile.fromPath(
