@@ -4,8 +4,16 @@ const Member = require("../models/member_model");
 function memberController() {
   return {
     async addMember(req, res) {
-      const { fname, lname, phoneNum, gender, medicalIssue, membershipPeriod } =
-        req.body;
+      const {
+        fname,
+        lname,
+        phoneNum,
+        gender,
+        medicalIssue,
+        membershipPeriod,
+        actual_amount,
+        paid_amount,
+      } = req.body;
 
       if (
         !fname ||
@@ -13,7 +21,9 @@ function memberController() {
         !phoneNum ||
         !gender ||
         !medicalIssue ||
-        !membershipPeriod
+        !membershipPeriod ||
+        !actual_amount ||
+        !paid_amount
       ) {
         return res
           .status(422)
@@ -41,6 +51,8 @@ function memberController() {
             medicalIssue: medicalIssue,
             membership_Period: membershipPeriod,
             profile_img: imageName,
+            actual_amount: actual_amount,
+            paid_amount: paid_amount,
           });
 
           newMember

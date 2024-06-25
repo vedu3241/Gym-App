@@ -1,7 +1,6 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_app/Screens/homeScreen.dart';
-import 'package:gym_app/Screens/member_profile.dart';
 import 'package:gym_app/Screens/membersScreen.dart';
 import 'package:gym_app/Screens/settingsScreen.dart';
 

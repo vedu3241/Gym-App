@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-import 'package:gym_app/Sample_Data/Member_data.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
 import 'package:url_launcher/url_launcher.dart';

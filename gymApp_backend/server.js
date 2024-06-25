@@ -13,8 +13,8 @@ const fileUpload = require("express-fileupload");
 let uri = "mongodb+srv://ved:test123@cluster0.1goshc7.mongodb.net/sk_fitnessDb";
 mongoose
   .connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true,
   })
   .then(() => console.log("Databse connected.."))
   .catch((err) => console.log(err));

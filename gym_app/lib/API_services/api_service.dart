@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:gym_app/models/member_model.dart';
@@ -21,7 +20,8 @@ class ApiService {
     request.fields['gender'] = member.gender!;
     request.fields['medicalIssue'] = member.medicalIssue!;
     request.fields['membershipPeriod'] = member.membershipPeriod.toString();
-    request.fields['amount'] = member.amount.toString();
+    request.fields['actual_amount'] = member.actualAmount.toString();
+    request.fields['paid_amount'] = member.paidAmount.toString();
 
     request.files.add(
       await http.MultipartFile.fromPath(

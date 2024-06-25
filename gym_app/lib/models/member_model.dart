@@ -6,7 +6,9 @@ class MemberModel {
   String? profileImg;
   String? medicalIssue;
   int? membershipPeriod;
-  int? amount; // mentioned as "package" somewhere
+  int? actualAmount; // mentioned as "package" somewhere
+  int? paidAmount;
+  int? dueAmount;
   DateTime? planStartDate;
   DateTime? planExpiryDate;
   int? daysRemaining;
@@ -20,7 +22,10 @@ class MemberModel {
     this.profileImg,
     this.medicalIssue,
     this.membershipPeriod,
-    this.amount,
+    this.actualAmount,
+    this.paidAmount,
+    //auto calc
+    this.dueAmount,
     this.planStartDate,
     this.planExpiryDate,
     this.daysRemaining,
@@ -37,7 +42,9 @@ class MemberModel {
       gender: json['gender'],
       medicalIssue: json['medicalIssue'],
       membershipPeriod: json['membership_Period'],
-      amount: json['amount'],
+      actualAmount: json['actual_amount'],
+      paidAmount: json['paid_amount'],
+      dueAmount: json['due_amount'],
       planStartDate: DateTime.parse(json['planStartDate']),
       planExpiryDate: DateTime.parse(json['planExpiryDate']),
       daysRemaining: json['daysRemaining'],

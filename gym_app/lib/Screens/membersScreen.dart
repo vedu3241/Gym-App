@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gym_app/API_services/api_service.dart';
-import 'package:gym_app/Sample_Data/Member_data.dart';
 import 'package:gym_app/components/member_tile.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';

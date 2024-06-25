@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:gym_app/Sample_Data/Member_data.dart';
 import 'package:gym_app/Screens/member_profile.dart';
 import 'package:gym_app/models/member_model.dart';
 import 'package:intl/intl.dart';
@@ -15,8 +12,8 @@ class MemberTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String imgPath =
-        "C:/flutter_projects/Gym_app/gymApp_backend/profile_images/${obj.profileImg}";
+    // final String imgPath =
+    //     "C:/flutter_projects/Gym_app/gymApp_backend/profile_images/${obj.profileImg}";
 
     return InkWell(
       onTap: () => Navigator.push(
@@ -46,8 +43,8 @@ class MemberTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 "assets/icons/user_img.jpg",
-                height: 100,
-                width: 100,
+                height: 90,
+                width: 90,
               ),
             ),
             const SizedBox(
@@ -92,7 +89,7 @@ class MemberTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Day Remaining",
+                          "Days Left",
                           style: TextStyle(color: Colors.grey[500]),
                         ),
                         Text(

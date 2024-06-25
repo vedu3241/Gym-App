@@ -11,6 +11,11 @@ const calculatePlanExpiryDate = (startDate, membershipPeriod) => {
   );
 };
 
+const calculateDueAmount = (actualAmount, paidAmount) => {
+  const dueAmount = actualAmount - paidAmount;
+  return dueAmount;
+};
+
 const memberSchema = new Schema(
   {
     first_name: String,
@@ -20,6 +25,14 @@ const memberSchema = new Schema(
     medicalIssue: String,
     membership_Period: Number,
     profile_img: String,
+    actual_amount: Number,
+    paid_amount: Number,
+    due_amount: {
+      type: Number,
+      default: function () {
+        return calculateDueAmount(this.actual_amount, this.paid_amount);
+      },
+    },
     planStartDate: {
       type: Date,
       default: Date.now,
