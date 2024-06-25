@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -27,7 +26,7 @@ class _MembersScreenState extends State<MembersScreen> {
 
   String searchText = '';
 
-  final List<String> planStatus = ['Active', 'Expired'];
+  final List<String> planStatus = ['Active', 'Expired', 'past due'];
   String _selectedPlanStatus = 'Active';
 
   //Available membershipPeriod
@@ -77,12 +76,18 @@ class _MembersScreenState extends State<MembersScreen> {
     return memberList.where((element) => element.expired == false).toList();
   }
 
+  List<MemberModel> getPastDue(List<MemberModel> memberList) {
+    return memberList.where((element) => element.dueAmount! > 0).toList();
+  }
+
   void _displayMembersByStatus(String status) {
     List<MemberModel> result = [];
     if (status == 'Active') {
       result = getActive(_mainList);
-    } else {
+    } else if (status == 'Expired') {
       result = getExpired(_mainList);
+    } else if (status == 'past due') {
+      result = getPastDue(_mainList);
     }
     setState(() {
       _members = result; //sort here if want
