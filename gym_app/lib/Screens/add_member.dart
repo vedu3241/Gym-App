@@ -554,7 +554,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 30,
                   )
                 ],

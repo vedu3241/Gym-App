@@ -24,7 +24,7 @@ mongoose
 // app.set("view engine", "ejs");
 
 //assets
-// app.use(express.static("public"));
+app.use("/public", express.static("public")); //you can use public folder to store img files ,etc so that it can be render on client side
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 

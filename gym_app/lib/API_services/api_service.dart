@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:gym_app/models/member_model.dart';
@@ -40,6 +41,24 @@ class ApiService {
     var res = await http.get(Uri.parse('$baseUrl/getMembers'));
 
     print("Inside service getMember");
+    return res;
+  }
+
+  Future<Response> updateMembership(MemberModel member) async {
+    var headers = {'Content-Type': 'application/json'};
+
+    var res = await http.post(Uri.parse('$baseUrl/updateMembership'),
+        headers: headers,
+        body: jsonEncode(
+          <String, dynamic>{
+            'id': member.id,
+            'membershipPeriod': member.membershipPeriod,
+            'actualAmount': member.actualAmount,
+            'paidAmount': member.paidAmount,
+            'dueAmount': member.dueAmount,
+            'paidDueAmount': member.paidDueAmount,
+          },
+        ));
     return res;
   }
 }

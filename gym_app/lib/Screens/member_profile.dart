@@ -1,8 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:gym_app/Screens/renewMembershipScreen.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:insta_image_viewer/insta_image_viewer.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ignore: must_be_immutable
@@ -26,6 +28,15 @@ class MemberProfile extends StatelessWidget {
     } catch (err) {
       print("Error in Call: " + err.toString());
     }
+  }
+
+  String formattedDate(DateTime dateString) {
+    DateTime dateTime = DateTime.parse(dateString.toString());
+    // Define a DateFormat
+    final DateFormat formatter = DateFormat.yMd();
+
+    // Format the date
+    return formatter.format(dateTime);
   }
 
   @override
@@ -54,14 +65,17 @@ class MemberProfile extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            'assets/icons/user_img.jpg',
-                            height: 60,
+                        InstaImageViewer(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              'http://192.168.0.103:6666/public/profile_img/${user.profileImg}',
+                              width: 90,
+                              height: 90,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 20),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -138,10 +152,20 @@ class MemberProfile extends StatelessWidget {
                           height: 40,
                           width: 40,
                         ),
-                        Image.asset(
-                          'assets/member_profile/renew.png',
-                          height: 40,
-                          width: 40,
+                        InkWell(
+                          onTap: () {
+                            // print(user.id);
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => RenewMembershipScreen(
+                                member: user,
+                              ),
+                            ));
+                          },
+                          child: Image.asset(
+                            'assets/member_profile/renew.png',
+                            height: 40,
+                            width: 40,
+                          ),
                         ),
                         Image.asset(
                           'assets/member_profile/block.png',
@@ -153,12 +177,12 @@ class MemberProfile extends StatelessWidget {
                   ],
                 ),
               ),
-              // Text - packages
-              const SizedBox(height: 10),
+              // Text - Membership
+              const SizedBox(height: 20),
               const Align(
                 alignment: Alignment.topLeft,
                 child: Text(
-                  "Packages",
+                  "Membership Details",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -181,27 +205,29 @@ class MemberProfile extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                           color: Color.fromARGB(255, 227, 173, 10)),
                     ),
-                    const Row(
+                    Row(
                       children: [
                         // Col 1
                         _PackageColumn(
-                            label1: "Total Amount",
-                            value1: "250",
-                            label2: "Paid",
-                            value2: "100"),
-                        SizedBox(width: 20),
+                          label1: "Total Amount",
+                          value1: user.actualAmount.toString(),
+                          label2: "Paid",
+                          value2: user.paidAmount.toString(),
+                        ),
+                        const SizedBox(width: 20),
                         // Col 2
                         _PackageColumn(
-                            label1: "Discount",
-                            value1: "0",
-                            label2: "Due amount",
-                            value2: "200"),
-                        SizedBox(width: 20),
+                          label1: "Discount",
+                          value1: "0",
+                          label2: "Due amount",
+                          value2: user.dueAmount.toString(),
+                        ),
+                        const SizedBox(width: 20),
                         // Col 3
                         _PackageColumn(
                             label1: "Purchase Date",
-                            value1: "27-04-2024",
-                            label2: "Day Remaining",
+                            value1: formattedDate(user.planStartDate!),
+                            label2: "Expiry Date",
                             value2: "27"),
                       ],
                     )

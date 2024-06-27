@@ -1,4 +1,5 @@
 class MemberModel {
+  String? id;
   String? firstName;
   String? lastName;
   int? phoneNum;
@@ -9,12 +10,14 @@ class MemberModel {
   int? actualAmount; // mentioned as "package" somewhere
   int? paidAmount;
   int? dueAmount;
+  int? paidDueAmount;
   DateTime? planStartDate;
   DateTime? planExpiryDate;
   int? daysRemaining;
   bool? expired;
 
   MemberModel({
+    this.id,
     this.firstName,
     this.lastName,
     this.phoneNum,
@@ -24,6 +27,7 @@ class MemberModel {
     this.membershipPeriod,
     this.actualAmount,
     this.paidAmount,
+    this.paidDueAmount,
     //auto calc
     this.dueAmount,
     this.planStartDate,
@@ -35,6 +39,7 @@ class MemberModel {
   //Converts JSON object into member model
   factory MemberModel.fromJson(Map<String, dynamic> json) {
     return MemberModel(
+      id: json['_id'],
       profileImg: json['profile_img'],
       firstName: json['first_name'],
       lastName: json['last_name'],
@@ -45,10 +50,22 @@ class MemberModel {
       actualAmount: json['actual_amount'],
       paidAmount: json['paid_amount'],
       dueAmount: json['due_amount'],
+      // paidDueAmount: json['paidDueAmount'],
       planStartDate: DateTime.parse(json['planStartDate']),
       planExpiryDate: DateTime.parse(json['planExpiryDate']),
       daysRemaining: json['daysRemaining'],
       expired: json['expired'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'membershipPeriod': membershipPeriod,
+      'actualAmount': actualAmount,
+      'paidAmount': paidAmount,
+      'dueAmount': dueAmount,
+      'paidDueAmount': paidDueAmount,
+    };
   }
 }

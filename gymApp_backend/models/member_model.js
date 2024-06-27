@@ -2,18 +2,28 @@ const { Timestamp } = require("bson");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Helper function to calculate the planExpiryDate
+// Helper function to calculate the planExpiryDate in IST
 const calculatePlanExpiryDate = (startDate, membershipPeriod) => {
-  return new Date(
+  let date = new Date(
     startDate.getFullYear(),
     startDate.getMonth() + membershipPeriod,
     startDate.getDate()
   );
+
+  // Convert to IST
+  date = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+  return date;
 };
 
 const calculateDueAmount = (actualAmount, paidAmount) => {
   const dueAmount = actualAmount - paidAmount;
   return dueAmount;
+};
+
+// Helper function to get current date in IST
+const getCurrentDateIST = () => {
+  const currentDate = new Date();
+  return new Date(currentDate.getTime() + 5.5 * 60 * 60 * 1000);
 };
 
 const memberSchema = new Schema(
@@ -35,7 +45,7 @@ const memberSchema = new Schema(
     },
     planStartDate: {
       type: Date,
-      default: Date.now,
+      default: getCurrentDateIST,
     },
     planExpiryDate: {
       type: Date,
@@ -49,6 +59,21 @@ const memberSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save middleware to adjust dates to IST
+memberSchema.pre("save", function (next) {
+  if (this.isModified("planStartDate")) {
+    this.planStartDate = new Date(
+      this.planStartDate.getTime() + 5.5 * 60 * 60 * 1000
+    );
+  }
+  if (this.isModified("planExpiryDate")) {
+    this.planExpiryDate = new Date(
+      this.planExpiryDate.getTime() + 5.5 * 60 * 60 * 1000
+    );
+  }
+  next();
+});
 
 // Virtual for daysRemaining
 memberSchema.virtual("daysRemaining").get(function () {

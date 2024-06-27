@@ -1,8 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:gym_app/Screens/member_profile.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:insta_image_viewer/insta_image_viewer.dart';
 import 'package:intl/intl.dart';
 
 class MemberTile extends StatelessWidget {
@@ -12,9 +13,6 @@ class MemberTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final String imgPath =
-    //     "C:/flutter_projects/Gym_app/gymApp_backend/profile_images/${obj.profileImg}";
-
     return InkWell(
       onTap: () => Navigator.push(
         context,
@@ -39,12 +37,14 @@ class MemberTile extends StatelessWidget {
           children: [
             //profile image
             // Image.file(File(imgPath), fit: BoxFit.cover)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                "assets/icons/user_img.jpg",
-                height: 90,
-                width: 90,
+            InstaImageViewer(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  'http://192.168.0.103:6666/public/profile_img/${obj.profileImg}',
+                  width: 90,
+                  height: 90,
+                ),
               ),
             ),
             const SizedBox(

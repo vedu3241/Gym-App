@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/components/member_tile.dart';
 import 'package:gym_app/components/my_app_bar.dart';
@@ -20,9 +19,10 @@ class _MembersScreenState extends State<MembersScreen> {
   //member Search Result
   // List<MemberData> _foundMembers = [];
   //Fetched list of members
-  List<MemberModel> _members = [];
+  List<MemberModel> _members =
+      []; // List which will be provided to display after applying filter options
 
-  List<MemberModel> _mainList = [];
+  List<MemberModel> _mainList = []; //Base list which will never be altered
 
   String searchText = '';
 
@@ -51,8 +51,9 @@ class _MembersScreenState extends State<MembersScreen> {
         fetchedMembers.add(member);
       }
       setState(() {
-        _members = sortByDayRemaining(fetchedMembers);
-        _mainList = sortByDayRemaining(fetchedMembers);
+        _members = sortByDayRemaining(
+            fetchedMembers); // List for displaying the result of filters
+        _mainList = sortByDayRemaining(fetchedMembers); //Original data
       });
       // print(_members);
     }
