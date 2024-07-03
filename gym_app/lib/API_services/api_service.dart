@@ -37,6 +37,7 @@ class ApiService {
     return res;
   }
 
+  //To retrieve all members
   Future<Response> getAllMembers() async {
     var res = await http.get(Uri.parse('$baseUrl/getMembers'));
 
@@ -44,6 +45,7 @@ class ApiService {
     return res;
   }
 
+  //update membership
   Future<Response> updateMembership(MemberModel member) async {
     var headers = {'Content-Type': 'application/json'};
 
@@ -59,6 +61,37 @@ class ApiService {
             'paidDueAmount': member.paidDueAmount,
           },
         ));
+    return res;
+  }
+
+  //remove member
+  Future<Response> removeMember(String memberId) async {
+    var res = await http.get(
+      Uri.parse('$baseUrl/removeMember?memberId=$memberId'),
+    );
+    return res;
+  }
+
+  //To update memberdue anytime
+  Future<Response> updateMemberDue(
+      String paidDue, int due, String memberId) async {
+    var headers = {'Content-Type': 'application/json'};
+
+    var res = await http.post(Uri.parse('$baseUrl/updateMemberDue'),
+        headers: headers,
+        body: jsonEncode(<String, dynamic>{
+          'memberId': memberId,
+          'paidDue': paidDue,
+          'due': due,
+        }));
+
+    return res;
+  }
+
+  // To retrieve monthly income history
+  Future<Response> getIncomeValues() async {
+    var res = await http.get(Uri.parse('$baseUrl/getIncome'));
+    print(res.body);
     return res;
   }
 }

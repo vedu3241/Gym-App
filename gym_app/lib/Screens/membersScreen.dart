@@ -16,6 +16,7 @@ class MembersScreen extends StatefulWidget {
 
 // updating code
 class _MembersScreenState extends State<MembersScreen> {
+  bool loading = true;
   //member Search Result
   // List<MemberData> _foundMembers = [];
   //Fetched list of members
@@ -54,6 +55,7 @@ class _MembersScreenState extends State<MembersScreen> {
         _members = sortByDayRemaining(
             fetchedMembers); // List for displaying the result of filters
         _mainList = sortByDayRemaining(fetchedMembers); //Original data
+        loading = false;
       });
       // print(_members);
     }
@@ -310,20 +312,22 @@ class _MembersScreenState extends State<MembersScreen> {
           const SizedBox(
             height: 10,
           ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Text(
-                "Total : ${_members.length}",
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                  color: Colors.black,
+          loading
+              ? const CircularProgressIndicator()
+              : Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Text(
+                      "Total : ${_members.length}",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
           const SizedBox(
             height: 10,
           ),

@@ -7,5 +7,6 @@ Code optimization{
 }
 
 Functionality  BUGS{
-    Filter not working
+    Filter not working - Done
+    add loading while fetching the data
 }

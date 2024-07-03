@@ -1,4 +1,6 @@
+const { json } = require("body-parser");
 const Member = require("../models/member_model");
+const IncomeHistory = require("../models/incomeHistory_model");
 const calculatePlanExpiryDate = (startDate, membershipPeriod) => {
   let date = new Date(
     startDate.getFullYear(),
@@ -10,6 +12,53 @@ const calculatePlanExpiryDate = (startDate, membershipPeriod) => {
   date = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
   return date;
 };
+//helper function to upadteIncome history
+async function updateIncome(paidAmount = 0, paidDue = 0) {
+  try {
+    const now = new Date();
+    const monthNames = [
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "may",
+      "jun",
+      "jul",
+      "aug",
+      "sep",
+      "oct",
+      "nov",
+      "dec",
+    ];
+    const currentMonth = monthNames[now.getMonth()];
+    const currentYear = now.getFullYear();
+
+    // Convert paidAmount and paidDue to integers explicitly
+    const newIncome = parseInt(paidAmount, 10) + parseInt(paidDue, 10);
+
+    const data = await IncomeHistory.findOne({ year: currentYear });
+    if (data) {
+      const currentIncome = parseInt(data[currentMonth], 10); // current income for that month
+      const finalIncome = currentIncome + newIncome;
+      const filter = { year: currentYear };
+      const update = { [currentMonth]: finalIncome };
+      await IncomeHistory.findOneAndUpdate(filter, update);
+      console.log("Income updated ");
+    } else {
+      const incomeHistory = new IncomeHistory({
+        year: currentYear,
+        [currentMonth]: newIncome,
+      });
+
+      await incomeHistory.save().then(() => {
+        console.log("Income inserted");
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 // const Complaint = require("../../models/complaints");
 function memberController() {
   return {
@@ -54,6 +103,7 @@ function memberController() {
             console.log(err);
             return res.status(500).send(err);
           }
+          updateIncome(parseInt(paid_amount));
           const newMember = new Member({
             first_name: fname,
             last_name: lname,
@@ -110,6 +160,9 @@ function memberController() {
       try {
         const currentDate = new Date();
 
+        //Updating income
+        updateIncome(parseInt(paidAmount), parseInt(paidDueAmount));
+
         const currentDue = actualAmount - paidAmount;
         const pastDue = dueAmount - paidDueAmount;
 
@@ -129,7 +182,7 @@ function memberController() {
           membership_Period: membershipPeriod,
           actual_amount: actualAmount,
           paid_amount: paidAmount,
-          due_amount: currentDue + pastDue,
+          due_amount: totalDue,
           planStartDate: planStartDate,
           planExpiryDate: expiryDate,
         };
@@ -150,6 +203,64 @@ function memberController() {
       }
 
       // console.log(req.body);
+    },
+
+    async removeMember(req, res) {
+      const memberId = req.query.memberId;
+      if (memberId) {
+        console.log(`Member ID: ${memberId}`);
+        try {
+          Member.deleteOne({ _id: memberId })
+            .then(() => {
+              console.log("member deleted");
+              res.status(200).send(`Member ID ${memberId} removed`);
+            })
+            .catch((err) => {
+              console.log("error deleting member in catch");
+            });
+        } catch (err) {
+          console.log("Something went wrong.." + err);
+        }
+      } else {
+        res.status(400).send("Member ID not found");
+      }
+    },
+
+    async updateMemberDue(req, res) {
+      try {
+        const { paidDue, due, memberId } = req.body;
+
+        //UPDATING INCOME
+        updateIncome(parseInt(paidDue));
+        remainingDue = due - paidDue;
+        const filter = { _id: memberId };
+        const update = { due_amount: remainingDue };
+
+        result = await Member.updateOne(filter, update);
+        if (result.modifiedCount > 0) {
+          console.log("Due updated");
+          return res.status(200).json({
+            message: "Due updated successfully",
+          });
+        } else {
+          return res.status(404).json({
+            message: "Member not found or no updates applied",
+          });
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async getIncomeValues(req, res) {
+      //fetch the income history as per year
+      data = await IncomeHistory.findOne({ year: 2024 }); //2024 as for now later will pass users choice
+
+      // Extract _doc from originalObject
+      const { _doc } = data;
+      const { _id, year, __v, ...remainingValues } = _doc;
+      // console.log(remainingValues);
+
+      res.status(200).json({ data: remainingValues });
     },
   };
 }

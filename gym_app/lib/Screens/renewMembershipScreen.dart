@@ -73,7 +73,7 @@ class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
     amount.toString();
 
     return Scaffold(
-      appBar: const MyAppBar(text: "New Member"),
+      appBar: const MyAppBar(text: "Update membership"),
       // backgroundColor: Colors.grey[200],
       body: SingleChildScrollView(
         child: Padding(

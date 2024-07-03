@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/Screens/renewMembershipScreen.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:http/http.dart';
 import 'package:insta_image_viewer/insta_image_viewer.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +16,11 @@ class MemberProfile extends StatelessWidget {
   MemberProfile({super.key, required this.user});
 
   MemberModel user;
+  final _formKey = GlobalKey<FormState>();
+
+  // Text Controllers
+  final TextEditingController _paidDueController = TextEditingController();
+
   _launchDialPad(String phoneNumber) async {
     try {
       Uri dialnumber = Uri(scheme: 'tel', path: phoneNumber);
@@ -28,6 +37,162 @@ class MemberProfile extends StatelessWidget {
     } catch (err) {
       print("Error in Call: " + err.toString());
     }
+  }
+
+  //open whatsapp with pre-define text
+  _openWhatsapp() async {
+    try {
+      int phoneNumber = user.phoneNum!; // Assuming user.phoneNum is of type int
+      String message = 'hello vedant!';
+      String url =
+          'https://wa.me/$phoneNumber/?text=${Uri.encodeComponent(message)}';
+      Uri uri = Uri.parse(url); // Parse the url string to create a Uri object
+      await launchUrl(uri);
+    } catch (err) {
+      print('Error launching WhatsApp: $err');
+    }
+  }
+
+  void _sendSms() {
+    // String recipientNumber = user.phoneNum.toString();
+    // String messageBody = "Your membership is been expired";
+    // SmsSender sender = SmsSender();
+    // String address = recipientNumber;
+    // sender.sendSms(SmsMessage(address, messageBody));
+  }
+
+  //remove member
+  void removeMember(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Removing member!!'),
+          content: Text('Are you sure?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () async {
+                Response res = await ApiService().removeMember(user.id!);
+                print(res.body);
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("cancel"))
+          ],
+        );
+      },
+    );
+  }
+
+  //update member's Due amount
+  void updateMemberDue(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Pay Due',
+            textAlign: TextAlign.center,
+          ),
+          backgroundColor: Colors.white,
+          content: Form(
+            child: Column(
+              mainAxisSize: MainAxisSize
+                  .min, // Ensures the AlertDialog takes only the space it needs
+
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  height: 20,
+                ),
+                Text(
+                  "Due Amount: ${user.dueAmount}",
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                TextFormField(
+                  controller: _paidDueController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Field can't be empty";
+                    }
+                    return null;
+                  },
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    label: Text("Paid due"),
+                    labelStyle: TextStyle(
+                      color: Colors.black,
+                    ),
+                    contentPadding: EdgeInsets.all(15),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black, width: 2.0),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10),
+                      ),
+                    ),
+                    // hintText: "First Name",
+                  ),
+                ),
+                // Save button
+                const SizedBox(
+                  height: 20,
+                ),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     if (_formKey.currentState!.validate()) {
+                //       ScaffoldMessenger.of(context).showSnackBar(
+                //         const SnackBar(
+                //           content: Text("Processing data"),
+                //         ),
+                //       );
+                //     }
+                //   },
+                //   child: const Text(
+                //     "Save",
+                //     style: TextStyle(
+                //       color: Colors.black,
+                //     ),
+                //   ),
+                // ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Submit'),
+              onPressed: () async {
+                Response res = await ApiService().updateMemberDue(
+                    _paidDueController.text, user.dueAmount!, user.id!);
+                if (res.statusCode == 200) {
+                  var jsonResponse = jsonDecode(res.body);
+                  print(jsonResponse['message']);
+                }
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text("cancel"))
+          ],
+        );
+      },
+    );
   }
 
   String formattedDate(DateTime dateString) {
@@ -119,11 +284,39 @@ class MemberProfile extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
+                        //Call button
                         GestureDetector(
                           onTap: () {
-                            print("call button clicked");
                             // _launchDialPad(user.phoneNumber);
-                            _callUser(user.phoneNum!.toString());
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                content: const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      height: 30,
+                                    ),
+                                    Text(
+                                      "Are you sure you want to make this call?",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      _callUser(user.phoneNum!.toString());
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text("Yes"),
+                                  )
+                                ],
+                              ),
+                            );
                           },
                           child: Image.asset(
                             'assets/member_profile/phone-call.png',
@@ -131,15 +324,27 @@ class MemberProfile extends StatelessWidget {
                             width: 40,
                           ),
                         ),
-                        Image.asset(
-                          'assets/member_profile/whatsapp.png',
-                          height: 40,
-                          width: 40,
+                        //whatsapp
+                        InkWell(
+                          onTap: () async {
+                            _openWhatsapp();
+                          },
+                          child: Image.asset(
+                            'assets/member_profile/whatsapp.png',
+                            height: 40,
+                            width: 40,
+                          ),
                         ),
-                        Image.asset(
-                          'assets/member_profile/sms.png',
-                          height: 40,
-                          width: 40,
+                        //sms
+                        InkWell(
+                          onTap: () {
+                            _sendSms();
+                          },
+                          child: Image.asset(
+                            'assets/member_profile/sms.png',
+                            height: 40,
+                            width: 40,
+                          ),
                         )
                       ],
                     ),
@@ -147,11 +352,19 @@ class MemberProfile extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Image.asset(
-                          'assets/member_profile/attendance.png',
-                          height: 40,
-                          width: 40,
+                        //Extra ICON
+                        //To renew due paid in between the on going membership
+                        InkWell(
+                          onTap: () {
+                            updateMemberDue(context);
+                          },
+                          child: Image.asset(
+                            'assets/member_profile/attendance.png',
+                            height: 40,
+                            width: 40,
+                          ),
                         ),
+                        //Renew Membership
                         InkWell(
                           onTap: () {
                             // print(user.id);
@@ -167,10 +380,17 @@ class MemberProfile extends StatelessWidget {
                             width: 40,
                           ),
                         ),
-                        Image.asset(
-                          'assets/member_profile/block.png',
-                          height: 40,
-                          width: 40,
+                        //Remove Member
+                        InkWell(
+                          onTap: () {
+                            print("remove tapped");
+                            removeMember(context);
+                          },
+                          child: Image.asset(
+                            'assets/member_profile/block.png',
+                            height: 40,
+                            width: 40,
+                          ),
                         )
                       ],
                     )
