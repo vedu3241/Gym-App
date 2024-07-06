@@ -253,7 +253,9 @@ function memberController() {
     },
     async getIncomeValues(req, res) {
       //fetch the income history as per year
-      data = await IncomeHistory.findOne({ year: 2024 }); //2024 as for now later will pass users choice
+      selectedYear = req.query.year;
+      // console.log("selected year :" + selectedYear);
+      data = await IncomeHistory.findOne({ year: selectedYear }); //2024 as for now later will pass users choice
 
       // Extract _doc from originalObject
       const { _doc } = data;
@@ -261,6 +263,17 @@ function memberController() {
       // console.log(remainingValues);
 
       res.status(200).json({ data: remainingValues });
+    },
+    //to fetch income history years available
+    async AvailIncomeYears(req, res) {
+      try {
+        const uniqueYears = await IncomeHistory.distinct("year");
+        console.log("Avail years: " + uniqueYears);
+        res.status(200).json({ years: uniqueYears });
+      } catch (error) {
+        console.error("Error fetching unique years:", error);
+        throw error;
+      }
     },
   };
 }

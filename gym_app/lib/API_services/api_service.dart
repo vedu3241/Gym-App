@@ -89,9 +89,23 @@ class ApiService {
   }
 
   // To retrieve monthly income history
-  Future<Response> getIncomeValues() async {
-    var res = await http.get(Uri.parse('$baseUrl/getIncome'));
+  Future<Response> getIncomeValues(int year) async {
+    var res = await http.get(Uri.parse('$baseUrl/getIncome?year=$year'));
     print(res.body);
     return res;
+  }
+
+  Future<List<int>> getAvailableYears() async {
+    String url = '$baseUrl/getAvailIncomeYears';
+    var response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body);
+      List<int> years = List<int>.from(jsonData['years']);
+      print(years);
+      return years;
+    } else {
+      throw Exception('Failed to load years');
+    }
   }
 }

@@ -8,5 +8,6 @@ router.post("/updateMembership", memberController().updateMembership);
 router.get("/removeMember", memberController().removeMember);
 router.post("/updateMemberDue", memberController().updateMemberDue);
 router.get("/getIncome", memberController().getIncomeValues);
+router.get("/getAvailIncomeYears", memberController().AvailIncomeYears);
 
 module.exports = router;

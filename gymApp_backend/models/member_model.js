@@ -37,6 +37,10 @@ const memberSchema = new Schema(
     profile_img: String,
     actual_amount: Number,
     paid_amount: Number,
+    joinOn: {
+      type: Date,
+      default: Date(),
+    },
     due_amount: {
       type: Number,
       default: function () {

@@ -17,9 +17,27 @@ class _IncomeChartState extends State<IncomeChart> {
   int selectedYear = DateTime.now().year; // Default to current year
   List<int> availableYears = [];
 
-  Future<void> fetchData() async {
+  Future<void> fetchAvailableYears() async {
     try {
-      Response res = await ApiService().getIncomeValues();
+      List<int> years = await ApiService().getAvailableYears();
+      setState(() {
+        availableYears = years;
+        // Ensure selectedYear is in availableYears
+        if (!availableYears.contains(selectedYear)) {
+          selectedYear = availableYears.isNotEmpty
+              ? availableYears.first
+              : DateTime.now().year;
+        }
+      });
+      fetchData(selectedYear); // Fetch data for initially selected year
+    } catch (e) {
+      print('Error fetching years: $e');
+    }
+  }
+
+  Future<void> fetchData(int year) async {
+    try {
+      Response res = await ApiService().getIncomeValues(year);
       if (res.statusCode == 200) {
         var jsonData = jsonDecode(res.body);
         List<double> temp = (jsonData['data'] as Map<String, dynamic>)
@@ -42,7 +60,7 @@ class _IncomeChartState extends State<IncomeChart> {
   @override
   void initState() {
     super.initState();
-    fetchData();
+    fetchAvailableYears();
   }
 
   double calculateMaxY(List<double> incomes) {
@@ -64,15 +82,52 @@ class _IncomeChartState extends State<IncomeChart> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
-                    height: 20,
+                  //Drop down for selecting year
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 30.0),
+                    child: SizedBox(
+                      width: 100,
+                      child: DropdownButtonFormField<int>(
+                        iconSize: 40,
+                        // iconEnabledColor: Colors.white,
+                        decoration: const InputDecoration(
+                          label: Text("Year", style: TextStyle(fontSize: 18)),
+                          // labelStyle: TextStyle(
+                          //   color: Colors.white,
+                          // ),
+                          // filled: true,
+                          // fillColor: Color.fromARGB(255, 99, 137, 152),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.transparent),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.transparent),
+                          ),
+                        ),
+                        value: selectedYear,
+                        onChanged: (int? year) {
+                          if (year != null) {
+                            setState(() {
+                              selectedYear = year;
+                            });
+                            fetchData(
+                              selectedYear,
+                            ); // Fetch data for the selected year
+                          }
+                        },
+                        items: availableYears.map((int year) {
+                          return DropdownMenuItem<int>(
+                            value: year,
+                            child: Text(
+                              year.toString(),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
-                  const Text(
-                    "Drop Down for Year",
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
+
                   Container(
                     constraints: const BoxConstraints(
                       minHeight: 0,

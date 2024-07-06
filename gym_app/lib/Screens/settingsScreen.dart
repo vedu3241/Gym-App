@@ -10,7 +10,27 @@ class SettingScreen extends StatelessWidget {
         title: const Text("Settings"),
       ),
       backgroundColor: Colors.grey[200],
-      body: const Center(child: Text("Coming soon..")),
+      body: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          children: [
+            Container(
+              // color: Colors.blue,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.all(20),
+              child: const Text(
+                "Change Plans",
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

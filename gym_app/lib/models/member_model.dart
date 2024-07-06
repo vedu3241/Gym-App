@@ -11,6 +11,7 @@ class MemberModel {
   int? paidAmount;
   int? dueAmount;
   int? paidDueAmount;
+  DateTime? joinOn;
   DateTime? planStartDate;
   DateTime? planExpiryDate;
   int? daysRemaining;
@@ -29,6 +30,7 @@ class MemberModel {
     this.paidAmount,
     this.paidDueAmount,
     //auto calc
+    this.joinOn,
     this.dueAmount,
     this.planStartDate,
     this.planExpiryDate,
@@ -51,6 +53,7 @@ class MemberModel {
       paidAmount: json['paid_amount'],
       dueAmount: json['due_amount'],
       // paidDueAmount: json['paidDueAmount'],
+      joinOn: DateTime.parse(json['joinOn']),
       planStartDate: DateTime.parse(json['planStartDate']),
       planExpiryDate: DateTime.parse(json['planExpiryDate']),
       daysRemaining: json['daysRemaining'],
