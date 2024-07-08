@@ -15,9 +15,7 @@ class MemberTile extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MemberProfile(
-            user: obj,
-          ),
+          builder: (context) => MemberProfile(userId: obj.id!),
         ),
       ),
       child: Container(

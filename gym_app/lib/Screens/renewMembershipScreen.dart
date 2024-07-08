@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/provider/memberProvider.dart';
 import 'package:http/http.dart';
+import 'package:provider/provider.dart';
 
 class RenewMembershipScreen extends StatefulWidget {
   const RenewMembershipScreen({super.key, required this.member});
@@ -15,6 +17,7 @@ class RenewMembershipScreen extends StatefulWidget {
 class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
   //Form key
   final _formKey = GlobalKey<FormState>();
+  final memberProv = MemberProvider();
 
   int? _selectedPackage = 1;
   //Available Packages
@@ -61,8 +64,10 @@ class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
 
       final Response res = await ApiService().updateMembership(member);
       // final responseData = jsonDecode(res.body);
-      print(res.body);
-      if (res.statusCode == 200) {}
+      if (res.statusCode == 200) {
+        Provider.of<MemberProvider>(context, listen: false).setMembers();
+        Navigator.of(context).pop();
+      }
     } catch (err) {
       print("C_Error In updateMembership: ${err}");
     }

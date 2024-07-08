@@ -5,7 +5,9 @@ import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/components/member_tile.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/provider/memberProvider.dart';
 import 'package:http/http.dart';
+import 'package:provider/provider.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -16,6 +18,8 @@ class MembersScreen extends StatefulWidget {
 
 // updating code
 class _MembersScreenState extends State<MembersScreen> {
+  // var memberProvider = Provider.of<MemberProvider>(context);
+
   bool loading = true;
   //member Search Result
   // List<MemberData> _foundMembers = [];
@@ -65,32 +69,22 @@ class _MembersScreenState extends State<MembersScreen> {
   void initState() {
     print("init called");
     getMembers();
-    // _members = sortByDayRemaining(_members);
+    //Updating list of members in provider
+    context.read<MemberProvider>().setMembers();
+    // _members = Provider.of<MemberProvider>(context, listen: false).members;
+    // _mainList = Provider.of<MemberProvider>(context, listen: false).mainList;
+
     super.initState();
-  }
-
-  //Function to get the expired plab members
-  List<MemberModel> getExpired(List<MemberModel> memberList) {
-    return memberList.where((element) => element.expired!).toList();
-  }
-
-  //Function to get the Active plan members
-  List<MemberModel> getActive(List<MemberModel> memberList) {
-    return memberList.where((element) => element.expired == false).toList();
-  }
-
-  List<MemberModel> getPastDue(List<MemberModel> memberList) {
-    return memberList.where((element) => element.dueAmount! > 0).toList();
   }
 
   void _displayMembersByStatus(String status) {
     List<MemberModel> result = [];
     if (status == 'Active') {
-      result = getActive(_mainList);
+      result = _mainList.where((element) => element.expired == false).toList();
     } else if (status == 'Expired') {
-      result = getExpired(_mainList);
+      result = _mainList.where((element) => element.expired!).toList();
     } else if (status == 'past due') {
-      result = getPastDue(_mainList);
+      result = _mainList.where((element) => element.dueAmount! > 0).toList();
     }
     setState(() {
       _members = result; //sort here if want
@@ -131,7 +125,8 @@ class _MembersScreenState extends State<MembersScreen> {
     }
 
     setState(() {
-      _members = searchResult;
+      _members =
+          searchResult; //make setMembers(searchResult) in provider and do notifylistners()
     });
   }
 

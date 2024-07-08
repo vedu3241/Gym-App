@@ -6,17 +6,18 @@ import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/Screens/renewMembershipScreen.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/provider/memberProvider.dart';
 import 'package:http/http.dart';
 import 'package:insta_image_viewer/insta_image_viewer.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ignore: must_be_immutable
 class MemberProfile extends StatelessWidget {
-  MemberProfile({super.key, required this.user});
+  MemberProfile({super.key, required this.userId});
 
-  MemberModel user;
-  final _formKey = GlobalKey<FormState>();
+  String userId;
 
   // Text Controllers
   final TextEditingController _paidDueController = TextEditingController();
@@ -40,12 +41,13 @@ class MemberProfile extends StatelessWidget {
   }
 
   //open whatsapp with pre-define text
-  _openWhatsapp() async {
+  _openWhatsapp(String phoneNumber, MemberModel member) async {
     try {
-      int phoneNumber = user.phoneNum!; // Assuming user.phoneNum is of type int
-      String message = 'hello vedant!';
+      String reminderText =
+          "Hello ${member.firstName}! We wanted to remind you that your gym membership is set to expire on ${formattedDate(member.planExpiryDate!)}.\n\nWe truly value your dedication and commitment to your fitness journey with us.\n\nIf you have any questions or wish to renew your membership, please don't hesitate to reach out to us. We look forward to continuing to support you in achieving your fitness goals.\n\nRegards- S.K Fitness";
+
       String url =
-          'https://wa.me/$phoneNumber/?text=${Uri.encodeComponent(message)}';
+          'https://wa.me/$phoneNumber/?text=${Uri.encodeComponent(reminderText)}';
       Uri uri = Uri.parse(url); // Parse the url string to create a Uri object
       await launchUrl(uri);
     } catch (err) {
@@ -62,20 +64,24 @@ class MemberProfile extends StatelessWidget {
   }
 
   //remove member
-  void removeMember(BuildContext context) {
+  void removeMember(BuildContext context, String id) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Removing member!!'),
-          content: Text('Are you sure?'),
+          title: const Text('Removing member!!'),
+          content: const Text('Are you sure?'),
           actions: <Widget>[
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                Response res = await ApiService().removeMember(user.id!);
+                Response res = await ApiService().removeMember(id);
+                if (res.statusCode == 200) {
+                  Provider.of<MemberProvider>(context, listen: false)
+                      .setMembers();
+                  Navigator.popUntil(context, ModalRoute.withName('/'));
+                }
                 print(res.body);
-                Navigator.of(context).pop();
               },
             ),
             TextButton(
@@ -90,7 +96,7 @@ class MemberProfile extends StatelessWidget {
   }
 
   //update member's Due amount
-  void updateMemberDue(BuildContext context) {
+  void updateMemberDue(BuildContext context, MemberModel member) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -111,7 +117,7 @@ class MemberProfile extends StatelessWidget {
                   height: 20,
                 ),
                 Text(
-                  "Due Amount: ${user.dueAmount}",
+                  "Due Amount: ${member.dueAmount}",
                   style: const TextStyle(fontSize: 18),
                 ),
                 const SizedBox(
@@ -151,23 +157,6 @@ class MemberProfile extends StatelessWidget {
                 const SizedBox(
                   height: 20,
                 ),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     if (_formKey.currentState!.validate()) {
-                //       ScaffoldMessenger.of(context).showSnackBar(
-                //         const SnackBar(
-                //           content: Text("Processing data"),
-                //         ),
-                //       );
-                //     }
-                //   },
-                //   child: const Text(
-                //     "Save",
-                //     style: TextStyle(
-                //       color: Colors.black,
-                //     ),
-                //   ),
-                // ),
               ],
             ),
           ),
@@ -176,9 +165,13 @@ class MemberProfile extends StatelessWidget {
               child: const Text('Submit'),
               onPressed: () async {
                 Response res = await ApiService().updateMemberDue(
-                    _paidDueController.text, user.dueAmount!, user.id!);
+                    _paidDueController.text, member.dueAmount!, member.id!);
                 if (res.statusCode == 200) {
                   var jsonResponse = jsonDecode(res.body);
+                  Provider.of<MemberProvider>(context, listen: false)
+                      .setMembers();
+                  //clearing controller
+                  _paidDueController.clear();
                   print(jsonResponse['message']);
                 }
                 Navigator.of(context).pop();
@@ -197,9 +190,7 @@ class MemberProfile extends StatelessWidget {
 
   String formattedDate(DateTime dateString) {
     DateTime dateTime = DateTime.parse(dateString.toString());
-    // Define a DateFormat
-    final DateFormat formatter = DateFormat.yMd();
-
+    final DateFormat formatter = DateFormat('dd-MM-yyyy');
     // Format the date
     return formatter.format(dateTime);
   }
@@ -207,258 +198,278 @@ class MemberProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const MyAppBar(
-        text: "Profile",
-      ),
-      backgroundColor: Colors.grey[200],
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              // Profile Container
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        appBar: const MyAppBar(
+          text: "Profile",
+        ),
+        backgroundColor: Colors.grey[200],
+        body: Consumer<MemberProvider>(
+          builder: (context, memberProvider, child) {
+            // fetching member from provider by using ID
+            final member = memberProvider.members.firstWhere(
+              (member) => member.id == userId,
+              orElse: () => MemberModel(id: '', firstName: 'Not Found'),
+            );
+
+            if (member.id!.isEmpty) {
+              return const Center(child: Text('Member not found'));
+            }
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   children: [
-                    // Info Card
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InstaImageViewer(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              'http://192.168.0.103:6666/public/profile_img/${user.profileImg}',
-                              width: 90,
-                              height: 90,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(user.firstName!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600)),
-                            Text(user.phoneNum!.toString()),
-                            const SizedBox(height: 10),
-                            Text("Medical Issue",
-                                style: TextStyle(color: Colors.grey[500])),
-                            Text(user.medicalIssue!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                        const SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Gender",
-                                style: TextStyle(color: Colors.grey[500])),
-                            const Text("Male",
-                                style: TextStyle(fontWeight: FontWeight.w500)),
-                            const SizedBox(height: 10),
-                            Text("Batch Name",
-                                style: TextStyle(color: Colors.grey[500])),
-                            const Text("Morning",
-                                style: TextStyle(fontWeight: FontWeight.w500)),
-                          ],
-                        )
-                      ],
-                    ),
-                    // Horizontal Divider line
+                    // Profile Container
                     Container(
-                      height: 1.5,
-                      width: 300,
-                      margin: const EdgeInsets.symmetric(vertical: 20),
-                      color: Colors.grey[300],
-                    ),
-                    // Contact Icons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        //Call button
-                        GestureDetector(
-                          onTap: () {
-                            // _launchDialPad(user.phoneNumber);
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                content: const Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: 30,
-                                    ),
-                                    Text(
-                                      "Are you sure you want to make this call?",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 15),
+                      child: Column(
+                        children: [
+                          // Info Card
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              InstaImageViewer(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    'http://192.168.0.103:6666/public/profile_img/${member.profileImg}',
+                                    width: 90,
+                                    height: 90,
+                                  ),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      _callUser(user.phoneNum!.toString());
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text("Yes"),
-                                  )
+                              ),
+                              const SizedBox(width: 20),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(member.firstName!,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600)),
+                                  Text(member.phoneNum!.toString()),
+                                  const SizedBox(height: 10),
+                                  Text("Medical Issue",
+                                      style:
+                                          TextStyle(color: Colors.grey[500])),
+                                  Text(member.medicalIssue!,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500)),
                                 ],
                               ),
-                            );
-                          },
-                          child: Image.asset(
-                            'assets/member_profile/phone-call.png',
-                            height: 40,
-                            width: 40,
+                              const SizedBox(width: 20),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Gender",
+                                      style:
+                                          TextStyle(color: Colors.grey[500])),
+                                  const Text("Male",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 10),
+                                  Text("Batch Name",
+                                      style:
+                                          TextStyle(color: Colors.grey[500])),
+                                  const Text("Morning",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500)),
+                                ],
+                              )
+                            ],
                           ),
-                        ),
-                        //whatsapp
-                        InkWell(
-                          onTap: () async {
-                            _openWhatsapp();
-                          },
-                          child: Image.asset(
-                            'assets/member_profile/whatsapp.png',
-                            height: 40,
-                            width: 40,
+                          // Horizontal Divider line
+                          Container(
+                            height: 1.5,
+                            width: 300,
+                            margin: const EdgeInsets.symmetric(vertical: 20),
+                            color: Colors.grey[300],
                           ),
-                        ),
-                        //sms
-                        InkWell(
-                          onTap: () {
-                            _sendSms();
-                          },
-                          child: Image.asset(
-                            'assets/member_profile/sms.png',
-                            height: 40,
-                            width: 40,
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 25),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        //Extra ICON
-                        //To renew due paid in between the on going membership
-                        InkWell(
-                          onTap: () {
-                            updateMemberDue(context);
-                          },
-                          child: Image.asset(
-                            'assets/member_profile/attendance.png',
-                            height: 40,
-                            width: 40,
-                          ),
-                        ),
-                        //Renew Membership
-                        InkWell(
-                          onTap: () {
-                            // print(user.id);
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => RenewMembershipScreen(
-                                member: user,
+                          // Contact Icons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              //Call button
+                              GestureDetector(
+                                onTap: () {
+                                  // _launchDialPad(user.phoneNumber);
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      content: const Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            height: 30,
+                                          ),
+                                          Text(
+                                            "Are you sure you want to make this call?",
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            _callUser(
+                                                member.phoneNum!.toString());
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text("Yes"),
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                },
+                                child: Image.asset(
+                                  'assets/member_profile/phone-call.png',
+                                  height: 40,
+                                  width: 40,
+                                ),
                               ),
-                            ));
-                          },
-                          child: Image.asset(
-                            'assets/member_profile/renew.png',
-                            height: 40,
-                            width: 40,
+                              //whatsapp
+                              InkWell(
+                                onTap: () async {
+                                  _openWhatsapp(
+                                      member.phoneNum!.toString(), member);
+                                },
+                                child: Image.asset(
+                                  'assets/member_profile/whatsapp.png',
+                                  height: 40,
+                                  width: 40,
+                                ),
+                              ),
+                              //sms
+                              InkWell(
+                                onTap: () {
+                                  _sendSms();
+                                },
+                                child: Image.asset(
+                                  'assets/member_profile/sms.png',
+                                  height: 40,
+                                  width: 40,
+                                ),
+                              )
+                            ],
                           ),
-                        ),
-                        //Remove Member
-                        InkWell(
-                          onTap: () {
-                            print("remove tapped");
-                            removeMember(context);
-                          },
-                          child: Image.asset(
-                            'assets/member_profile/block.png',
-                            height: 40,
-                            width: 40,
-                          ),
-                        )
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              // Text - Membership
-              const SizedBox(height: 20),
-              const Align(
-                alignment: Alignment.topLeft,
-                child: Text(
-                  "Membership Details",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                ),
-              ),
-              const SizedBox(height: 10),
-              // Packages Container
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${user.membershipPeriod} month plan",
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Color.fromARGB(255, 227, 173, 10)),
+                          const SizedBox(height: 25),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              //Extra ICON
+                              //To renew due paid in between the on going membership
+                              InkWell(
+                                onTap: () {
+                                  updateMemberDue(context, member);
+                                },
+                                child: Image.asset(
+                                  'assets/member_profile/attendance.png',
+                                  height: 40,
+                                  width: 40,
+                                ),
+                              ),
+                              //Renew Membership
+                              InkWell(
+                                onTap: () {
+                                  // print(user.id);
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => RenewMembershipScreen(
+                                      member: member,
+                                    ),
+                                  ));
+                                },
+                                child: Image.asset(
+                                  'assets/member_profile/renew.png',
+                                  height: 40,
+                                  width: 40,
+                                ),
+                              ),
+                              //Remove Member
+                              InkWell(
+                                onTap: () {
+                                  print("remove tapped");
+                                  removeMember(context, member.id!);
+                                },
+                                child: Image.asset(
+                                  'assets/member_profile/block.png',
+                                  height: 40,
+                                  width: 40,
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      ),
                     ),
-                    Row(
-                      children: [
-                        // Col 1
-                        _PackageColumn(
-                          label1: "Total Amount",
-                          value1: user.actualAmount.toString(),
-                          label2: "Paid",
-                          value2: user.paidAmount.toString(),
-                        ),
-                        const SizedBox(width: 20),
-                        // Col 2
-                        _PackageColumn(
-                          label1: "Discount",
-                          value1: "0",
-                          label2: "Due amount",
-                          value2: user.dueAmount.toString(),
-                        ),
-                        const SizedBox(width: 20),
-                        // Col 3
-                        _PackageColumn(
-                            label1: "Purchase Date",
-                            value1: formattedDate(user.planStartDate!),
-                            label2: "Expiry Date",
-                            value2: "27"),
-                      ],
+                    // Text - Membership
+                    const SizedBox(height: 20),
+                    const Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        "Membership Details",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Packages Container
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 20, horizontal: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${member.membershipPeriod} month plan",
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromARGB(255, 227, 173, 10)),
+                          ),
+                          Row(
+                            children: [
+                              // Col 1
+                              _PackageColumn(
+                                label1: "Total Amount",
+                                value1: member.actualAmount.toString(),
+                                label2: "Paid",
+                                value2: member.paidAmount.toString(),
+                              ),
+                              const SizedBox(width: 20),
+                              // Col 2
+                              _PackageColumn(
+                                label1: "Discount",
+                                value1: "0",
+                                label2: "Due amount",
+                                value2: member.dueAmount.toString(),
+                              ),
+                              const SizedBox(width: 20),
+                              // Col 3
+                              _PackageColumn(
+                                  label1: "Purchase Date",
+                                  value1: formattedDate(member.planStartDate!),
+                                  label2: "Expiry Date",
+                                  value2: "27"),
+                            ],
+                          )
+                        ],
+                      ),
                     )
                   ],
                 ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+              ),
+            );
+          },
+        ));
   }
 }
 

@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/provider/memberProvider.dart';
 import 'package:http/http.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class AddMemberScreen extends StatefulWidget {
   const AddMemberScreen({super.key});
@@ -88,6 +90,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         final Response res = await ApiService().addMember(member, imageFile!);
         // final responseData = jsonDecode(res.body);
         if (res.statusCode == 200) {
+          context.read<MemberProvider>().setMembers();
           Navigator.pop(context);
         }
       }
