@@ -91,7 +91,7 @@ class ApiService {
   // To retrieve monthly income history
   Future<Response> getIncomeValues(int year) async {
     var res = await http.get(Uri.parse('$baseUrl/getIncome?year=$year'));
-    print(res.body);
+    // print(res.body);
     return res;
   }
 

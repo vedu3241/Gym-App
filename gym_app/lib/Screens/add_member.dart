@@ -56,7 +56,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   }
 
   //Methods
-  Future addMember() async {
+  Future addMember(BuildContext context) async {
     try {
       //If image is not selected then show error
       if (imageFile == null) {
@@ -546,7 +546,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                             content: Text("Processing data"),
                           ),
                         );
-                        addMember();
+                        addMember(context);
                       }
                       print(_amountPaidController);
                     },

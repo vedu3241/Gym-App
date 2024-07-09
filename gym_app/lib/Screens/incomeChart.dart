@@ -47,6 +47,7 @@ class _IncomeChartState extends State<IncomeChart> {
 
         setState(() {
           // JSON structure is like {"January": 1000, "February": 1500, ...}
+
           incomes = temp;
         });
       } else {
