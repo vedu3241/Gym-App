@@ -17,7 +17,7 @@ class RenewMembershipScreen extends StatefulWidget {
 class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
   //Form key
   final _formKey = GlobalKey<FormState>();
-  final memberProv = MemberProvider();
+  bool isDueAmountPaid = false;
 
   int? _selectedPackage = 1;
   //Available Packages
@@ -27,8 +27,6 @@ class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
   // Text Controllers
 
   final TextEditingController _amountPaidController = TextEditingController();
-  final TextEditingController _dueAmountPaidController =
-      TextEditingController(text: "0");
 
   int calculateAmount(int months) {
     // Example pricing logic, replace with your own
@@ -49,23 +47,25 @@ class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
   }
 
   //Methods
-  Future _updateMembership() async {
+  Future _updateMembership(BuildContext context) async {
     try {
       MemberModel member = MemberModel(
         id: widget.member.id,
         membershipPeriod: _selectedPackage!,
         actualAmount: amount,
         paidAmount: int.parse(_amountPaidController.text),
-
         // Due fields
         dueAmount: widget.member.dueAmount,
-        paidDueAmount: int.parse(_dueAmountPaidController.text),
+        // paidDueAmount: int.parse(
+        //   _dueAmountPaidController.text,
+        // ),
       );
 
       final Response res = await ApiService().updateMembership(member);
       // final responseData = jsonDecode(res.body);
       if (res.statusCode == 200) {
-        Provider.of<MemberProvider>(context, listen: false).setMembers();
+        // Provider.of<MemberProvider>(context, listen: false).setMembers();
+        context.read<MemberProvider>().setMemberships();
         Navigator.of(context).pop();
       }
     } catch (err) {
@@ -101,15 +101,11 @@ class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
                         )),
                   ),
                   const SizedBox(
-                    height: 10.0,
-                  ),
-
-                  const SizedBox(
-                    height: 20.0,
+                    height: 30.0,
                   ),
                   // Full Name
                   Text(
-                    "Full Name: ${widget.member.firstName!}${widget.member.lastName}",
+                    "Full Name: ${widget.member.firstName!} ${widget.member.lastName}",
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.w500),
                   ),
@@ -124,171 +120,162 @@ class _RenewMembershipScreenState extends State<RenewMembershipScreen> {
                     height: 10,
                   ),
                   widget.member.dueAmount! > 0
-                      ? Text(
-                          "Due amount: ${widget.member.dueAmount}",
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w500),
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Due amount: ${widget.member.dueAmount}",
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w500),
+                            ),
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: isDueAmountPaid,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isDueAmountPaid = value!;
+                                    });
+                                  },
+                                ),
+                                const Text('Is Due Amount Paid?'),
+                              ],
+                            ),
+                          ],
                         )
                       : const SizedBox(),
                   const SizedBox(
-                    height: 20,
+                    height: 25,
                   ),
+                  isDueAmountPaid || widget.member.dueAmount! == 0
+                      ? Column(
+                          children: [
+                            // Drop down for package
+                            DropdownButtonFormField<int>(
+                              value: _selectedPackage,
+                              decoration: const InputDecoration(
+                                labelText: "Membership Duration",
+                                labelStyle: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors.black, width: 2.0),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                              ),
+                              iconEnabledColor: Colors.white,
+                              items: packages.map((int value) {
+                                return DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(
+                                    '${value.toString()} Month${value > 1 ? 's' : ''}',
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (int? value) {
+                                setState(() {
+                                  _selectedPackage = value!;
+                                  amount = calculateAmount(value);
+                                });
+                              },
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
 
-                  // Drop down for package
-                  DropdownButtonFormField<int>(
-                    value: _selectedPackage,
-                    decoration: const InputDecoration(
-                      labelText: "Membership Duration",
-                      labelStyle: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(10),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 2.0),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(10),
-                        ),
-                      ),
-                    ),
-                    iconEnabledColor: Colors.white,
-                    items: packages.map((int value) {
-                      return DropdownMenuItem<int>(
-                        value: value,
-                        child: Text(
-                          '${value.toString()} Month${value > 1 ? 's' : ''}',
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (int? value) {
-                      setState(() {
-                        _selectedPackage = value!;
-                        amount = calculateAmount(value);
-                      });
-                    },
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-
-                  //Actual amount
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        const Text(
-                          "Amount: ",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w500),
-                        ),
-                        const Icon(
-                          Icons.currency_rupee,
-                          size: 20,
-                        ),
-                        Text(
-                          amount.toString(),
-                          style: const TextStyle(
-                            fontSize: 20,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-
-                  //Input field for actual amount paid
-                  TextFormField(
-                    controller: _amountPaidController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Field can't be empty";
-                      }
-                      return null;
-                    },
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      label: Text("Paid Amount"),
-                      contentPadding: EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(10),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 2.0),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
-
-                  // Input for due paid (if there any)
-                  widget.member.dueAmount! > 0
-                      ? TextFormField(
-                          controller: _dueAmountPaidController,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Field can't be empty";
-                            }
-                            return null;
-                          },
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            label: Text("Paid Due"),
-                            contentPadding: EdgeInsets.all(15),
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.black),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
+                            //Actual amount
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    "Amount: ",
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  const Icon(
+                                    Icons.currency_rupee,
+                                    size: 20,
+                                  ),
+                                  Text(
+                                    amount.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  )
+                                ],
                               ),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.black, width: 2.0),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
+
+                            //Input field for actual amount paid
+                            TextFormField(
+                              controller: _amountPaidController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "Field can't be empty";
+                                }
+                                return null;
+                              },
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                label: Text("Paid Amount"),
+                                contentPadding: EdgeInsets.all(15),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors.black, width: 2.0),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            Center(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Processing data"),
+                                      ),
+                                    );
+                                    _updateMembership(context);
+                                  }
+                                },
+                                child: const Text(
+                                  "Save",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            )
+                          ],
                         )
                       : const SizedBox(),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  // Save button
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Processing data"),
-                            ),
-                          );
-                          _updateMembership();
-                        }
-                      },
-                      child: const Text(
-                        "Save",
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 30,
-                  )
                 ],
               ),
             ),

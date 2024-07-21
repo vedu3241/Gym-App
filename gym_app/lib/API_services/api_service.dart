@@ -58,7 +58,7 @@ class ApiService {
             'actualAmount': member.actualAmount,
             'paidAmount': member.paidAmount,
             'dueAmount': member.dueAmount,
-            'paidDueAmount': member.paidDueAmount,
+            // 'paidDueAmount': member.paidDueAmount,
           },
         ));
     return res;
@@ -102,7 +102,7 @@ class ApiService {
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body);
       List<int> years = List<int>.from(jsonData['years']);
-      print(years);
+
       return years;
     } else {
       throw Exception('Failed to load years');

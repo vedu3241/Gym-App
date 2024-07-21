@@ -1,6 +1,7 @@
 const { json } = require("body-parser");
 const Member = require("../models/member_model");
 const IncomeHistory = require("../models/incomeHistory_model");
+const Membership = require("../models/Membership_model");
 const calculatePlanExpiryDate = (startDate, membershipPeriod) => {
   let date = new Date(
     startDate.getFullYear(),
@@ -98,7 +99,7 @@ function memberController() {
           __dirname + "/../public/profile_img/" + uploadedImg.name;
         const imageName = uploadedImg.name; // for storing into MongoDB
         // Moving file to local storage
-        uploadedImg.mv(filePath, (err) => {
+        uploadedImg.mv(filePath, async (err) => {
           if (err) {
             console.log(err);
             return res.status(500).send(err);
@@ -110,17 +111,32 @@ function memberController() {
             phone_num: phoneNum,
             gender: gender,
             medicalIssue: medicalIssue,
-            membership_Period: membershipPeriod,
             profile_img: imageName,
+            membership_Period: membershipPeriod,
             actual_amount: actual_amount,
             paid_amount: paid_amount,
           });
 
-          newMember
+          await newMember
             .save()
-            .then(() => {
+            .then((savedMember) => {
               console.log("Member Inserted");
-              return res.status(200).json({ message: "Member added.." });
+
+              // saving membership after adding new member
+              const membership = new Membership({
+                memberId: savedMember._id,
+                membership_Period: membershipPeriod,
+                membershipAmount: actual_amount,
+                paidAmount: paid_amount,
+              });
+
+              return membership.save(); // Return the promise of membership.save()
+            })
+            .then(() => {
+              console.log("Membership assigned");
+              return res
+                .status(200)
+                .json({ message: "Member Added with membership" });
             })
             .catch((err) => {
               console.log(`Error: adding member ${err}`);
@@ -149,55 +165,51 @@ function memberController() {
       }
     },
     async updateMembership(req, res) {
-      const {
-        id,
-        membershipPeriod,
-        actualAmount,
-        paidAmount,
-        dueAmount,
-        paidDueAmount,
-      } = req.body;
       try {
-        const currentDate = new Date();
-
+        const { id, membershipPeriod, actualAmount, paidAmount, dueAmount } =
+          req.body;
+        console.log(dueAmount);
         //Updating income
-        updateIncome(parseInt(paidAmount), parseInt(paidDueAmount));
+        updateIncome(parseInt(paidAmount), parseInt(dueAmount));
 
-        const currentDue = actualAmount - paidAmount;
-        const pastDue = dueAmount - paidDueAmount;
+        if (dueAmount > 0) {
+          const filter = { memberId: id, dueAmount: dueAmount };
+          const update = {
+            //update the due of prev membership of this member
+            $inc: { paidAmount: dueAmount },
+            // $inc: { dueAmount: -dueAmount },
+            dueAmount: 0,
+          };
 
-        const totalDue = currentDue + pastDue;
-        //Calculating Plan start date
-        const planStartDate = new Date(
-          currentDate.getTime() + 5.5 * 60 * 60 * 1000
-        );
-        // Calculating expiry date
-        const expiryDate = calculatePlanExpiryDate(
-          planStartDate,
-          membershipPeriod
-        );
+          //updating paid due
+          result = await Membership.updateOne(filter, update);
 
-        const filter = { _id: id };
-        const update = {
-          membership_Period: membershipPeriod,
-          actual_amount: actualAmount,
-          paid_amount: paidAmount,
-          due_amount: totalDue,
-          planStartDate: planStartDate,
-          planExpiryDate: expiryDate,
-        };
-
-        result = await Member.updateOne(filter, update);
-        if (result.modifiedCount > 0) {
-          console.log("Modified");
-          return res.status(200).json({
-            message: "Membership updated successfully",
-          });
-        } else {
-          return res.status(404).json({
-            message: "Member not found or no updates applied",
-          });
+          if (result.modifiedCount > 0) {
+            console.log("renew stage 1 ");
+          } else {
+            // return res.status(404).json({
+            //   message: "Error updating prev due in renewal ",
+            // });
+            console.log("renew stage 1 failed!!!");
+          }
         }
+
+        //Adding new plan
+        const newMembership = new Membership({
+          memberId: id,
+          membership_Period: membershipPeriod,
+          membershipAmount: actualAmount,
+          paidAmount: paidAmount,
+        });
+
+        newMembership
+          .save()
+          .then(() => {
+            console.log("added new membership");
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       } catch (err) {
         console.log("Error in :updateMem - " + err);
       }
@@ -229,14 +241,22 @@ function memberController() {
     async updateMemberDue(req, res) {
       try {
         const { paidDue, due, memberId } = req.body;
+        console.log("memberid: " + memberId);
+        console.log("paidDue: " + paidDue);
+        console.log("due: " + due);
 
         //UPDATING INCOME
         updateIncome(parseInt(paidDue));
-        remainingDue = due - paidDue;
-        const filter = { _id: memberId };
-        const update = { due_amount: remainingDue };
+        const remainingDue = due - paidDue;
+        console.log("remaining due: " + remainingDue);
+        const filter = { memberId: memberId, dueAmount: due };
+        const update = {
+          $inc: { paidAmount: paidDue },
+          dueAmount: remainingDue,
+        };
 
-        result = await Member.updateOne(filter, update);
+        result = await Membership.updateOne(filter, update);
+        console.log(result);
         if (result.modifiedCount > 0) {
           console.log("Due updated");
           return res.status(200).json({

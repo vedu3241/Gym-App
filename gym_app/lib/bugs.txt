@@ -9,4 +9,6 @@ Code optimization{
 Functionality  BUGS{
     Filter not working - Done
     add loading while fetching the data
+    On member remove - remove their memberships as well
+
 }

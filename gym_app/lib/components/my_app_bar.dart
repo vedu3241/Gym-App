@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:gym_app/Screens/add_member.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -43,7 +42,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AddMemberScreen(),
+                                builder: (context) => const AddMemberScreen(),
                               ));
                         },
                         icon: ColorFiltered(
@@ -68,5 +67,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  @override
   Size get preferredSize => AppBar().preferredSize;
 }

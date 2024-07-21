@@ -91,6 +91,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         // final responseData = jsonDecode(res.body);
         if (res.statusCode == 200) {
           context.read<MemberProvider>().setMembers();
+          context.read<MemberProvider>().setMemberships();
           Navigator.pop(context);
         }
       }
@@ -387,7 +388,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           value: "Male",
                           activeColor: Colors.black,
                           groupValue: selectedRadio,
-                          contentPadding: EdgeInsets.all(0),
+                          contentPadding: const EdgeInsets.all(0),
                           title: const Text('Male'),
                           onChanged: (value) {
                             handleRadioValueChanged(value!);
@@ -398,7 +399,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                         child: RadioListTile(
                           value: "Female",
                           groupValue: selectedRadio,
-                          contentPadding: EdgeInsets.all(0),
+                          contentPadding: const EdgeInsets.all(0),
                           title: const Text('Female'),
                           activeColor: Colors.black,
                           onChanged: (value) {

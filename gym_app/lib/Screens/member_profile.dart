@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:gym_app/API_services/api_service.dart';
+import 'package:gym_app/Screens/membershipHistoryScreen.dart';
 import 'package:gym_app/Screens/renewMembershipScreen.dart';
 import 'package:gym_app/components/my_app_bar.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/models/membership_model.dart';
 import 'package:gym_app/provider/memberProvider.dart';
 import 'package:http/http.dart';
 import 'package:insta_image_viewer/insta_image_viewer.dart';
@@ -27,7 +29,7 @@ class MemberProfile extends StatelessWidget {
       Uri dialnumber = Uri(scheme: 'tel', path: phoneNumber);
       await launchUrl(dialnumber);
     } catch (err) {
-      print("Error in Call: " + err.toString());
+      print("Error in Call: $err");
     }
   }
 
@@ -41,10 +43,11 @@ class MemberProfile extends StatelessWidget {
   }
 
   //open whatsapp with pre-define text
-  _openWhatsapp(String phoneNumber, MemberModel member) async {
+  _openWhatsapp(
+      String phoneNumber, MemberModel member, Membership membership) async {
     try {
       String reminderText =
-          "Hello ${member.firstName}! We wanted to remind you that your gym membership is set to expire on ${formattedDate(member.planExpiryDate!)}.\n\nWe truly value your dedication and commitment to your fitness journey with us.\n\nIf you have any questions or wish to renew your membership, please don't hesitate to reach out to us. We look forward to continuing to support you in achieving your fitness goals.\n\nRegards- S.K Fitness";
+          "Hello ${member.firstName}! We wanted to remind you that your gym membership is set to expire on ${formattedDate(membership.planExpiryDate!)}.\n\nWe truly value your dedication and commitment to your fitness journey with us.\n\nIf you have any questions or wish to renew your membership, please don't hesitate to reach out to us. We look forward to continuing to support you in achieving your fitness goals.\n\nRegards- S.K Fitness";
 
       String url =
           'https://wa.me/$phoneNumber/?text=${Uri.encodeComponent(reminderText)}';
@@ -73,7 +76,7 @@ class MemberProfile extends StatelessWidget {
           content: const Text('Are you sure?'),
           actions: <Widget>[
             TextButton(
-              child: Text('Yes'),
+              child: const Text('Yes'),
               onPressed: () async {
                 Response res = await ApiService().removeMember(id);
                 if (res.statusCode == 200) {
@@ -88,7 +91,7 @@ class MemberProfile extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text("cancel"))
+                child: const Text("cancel"))
           ],
         );
       },
@@ -96,7 +99,8 @@ class MemberProfile extends StatelessWidget {
   }
 
   //update member's Due amount
-  void updateMemberDue(BuildContext context, MemberModel member) {
+  void updateMemberDue(
+      BuildContext context, MemberModel member, Membership membership) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -117,7 +121,7 @@ class MemberProfile extends StatelessWidget {
                   height: 20,
                 ),
                 Text(
-                  "Due Amount: ${member.dueAmount}",
+                  "Due Amount: ${membership.dueAmount}",
                   style: const TextStyle(fontSize: 18),
                 ),
                 const SizedBox(
@@ -165,11 +169,12 @@ class MemberProfile extends StatelessWidget {
               child: const Text('Submit'),
               onPressed: () async {
                 Response res = await ApiService().updateMemberDue(
-                    _paidDueController.text, member.dueAmount!, member.id!);
+                    _paidDueController.text, membership.dueAmount!, member.id!);
                 if (res.statusCode == 200) {
                   var jsonResponse = jsonDecode(res.body);
-                  Provider.of<MemberProvider>(context, listen: false)
-                      .setMembers();
+                  // Provider.of<MemberProvider>(context, listen: false)
+                  //     .setMembers();
+                  context.read<MemberProvider>().setMemberships();
                   //clearing controller
                   _paidDueController.clear();
                   print(jsonResponse['message']);
@@ -213,6 +218,10 @@ class MemberProfile extends StatelessWidget {
             if (member.id!.isEmpty) {
               return const Center(child: Text('Member not found'));
             }
+
+            final membership = memberProvider.activeMemberships.firstWhere(
+              (element) => element.memberId == userId,
+            );
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -335,8 +344,8 @@ class MemberProfile extends StatelessWidget {
                               //whatsapp
                               InkWell(
                                 onTap: () async {
-                                  _openWhatsapp(
-                                      member.phoneNum!.toString(), member);
+                                  _openWhatsapp(member.phoneNum!.toString(),
+                                      member, membership);
                                 },
                                 child: Image.asset(
                                   'assets/member_profile/whatsapp.png',
@@ -365,7 +374,7 @@ class MemberProfile extends StatelessWidget {
                               //To renew due paid in between the on going membership
                               InkWell(
                                 onTap: () {
-                                  updateMemberDue(context, member);
+                                  updateMemberDue(context, member, membership);
                                 },
                                 child: Image.asset(
                                   'assets/member_profile/attendance.png',
@@ -411,7 +420,7 @@ class MemberProfile extends StatelessWidget {
                     const Align(
                       alignment: Alignment.topLeft,
                       child: Text(
-                        "Membership Details",
+                        "Active Membership Details",
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.w500),
                       ),
@@ -429,7 +438,7 @@ class MemberProfile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${member.membershipPeriod} month plan",
+                            "${membership.membershipPeriod} month plan",
                             style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
@@ -440,9 +449,9 @@ class MemberProfile extends StatelessWidget {
                               // Col 1
                               _PackageColumn(
                                 label1: "Total Amount",
-                                value1: member.actualAmount.toString(),
+                                value1: membership.membershipAmount.toString(),
                                 label2: "Paid",
-                                value2: member.paidAmount.toString(),
+                                value2: membership.paidAmount.toString(),
                               ),
                               const SizedBox(width: 20),
                               // Col 2
@@ -450,20 +459,54 @@ class MemberProfile extends StatelessWidget {
                                 label1: "Discount",
                                 value1: "0",
                                 label2: "Due amount",
-                                value2: member.dueAmount.toString(),
+                                value2: membership.dueAmount.toString(),
                               ),
                               const SizedBox(width: 20),
                               // Col 3
                               _PackageColumn(
-                                  label1: "Purchase Date",
-                                  value1: formattedDate(member.planStartDate!),
-                                  label2: "Expiry Date",
-                                  value2: "27"),
+                                label1: "Purchase Date",
+                                value1:
+                                    formattedDate(membership.planStartDate!),
+                                label2: "Expiry Date",
+                                value2:
+                                    formattedDate(membership.planExpiryDate!),
+                              ),
                             ],
                           )
                         ],
                       ),
-                    )
+                    ),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MembershipHistoryScreen(memberId: userId),
+                            ));
+                      },
+                      child: const Align(
+                        alignment: Alignment.topLeft,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Text(
+                                "History",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Icon(Icons.history),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

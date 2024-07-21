@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:gym_app/Screens/member_profile.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/models/membership_model.dart';
 import 'package:insta_image_viewer/insta_image_viewer.dart';
 import 'package:intl/intl.dart';
 
 class MemberTile extends StatelessWidget {
-  const MemberTile({super.key, required this.obj});
+  const MemberTile({super.key, required this.obj, required this.membership});
 
   final MemberModel obj;
+  final Membership? membership;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,7 @@ class MemberTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: obj.expired!
+          border: membership!.expired!
               ? Border.all(color: const Color(0xFFE72929))
               : Border.all(color: Colors.white),
         ),
@@ -73,7 +75,8 @@ class MemberTile extends StatelessWidget {
                           style: TextStyle(color: Colors.grey[500]),
                         ),
                         Text(
-                          DateFormat.yMMMd().format(obj.planExpiryDate!),
+                          DateFormat.yMMMd()
+                              .format(membership!.planExpiryDate!),
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ],
@@ -89,7 +92,7 @@ class MemberTile extends StatelessWidget {
                           style: TextStyle(color: Colors.grey[500]),
                         ),
                         Text(
-                          obj.daysRemaining.toString(),
+                          membership!.daysRemaining.toString(),
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ],

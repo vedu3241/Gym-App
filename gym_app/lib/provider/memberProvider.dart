@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:gym_app/API_services/api_service.dart';
+import 'package:gym_app/API_services/api_service_membership.dart';
 import 'package:gym_app/models/member_model.dart';
+import 'package:gym_app/models/membership_model.dart';
 import 'package:http/http.dart';
 
 List<MemberModel> sortByDayRemaining(List<MemberModel> memberList) {
@@ -16,6 +18,8 @@ class MemberProvider with ChangeNotifier {
   List<MemberModel> _members =
       []; // List which will be provided to display after applying filter options
   List<MemberModel> _mainList = []; //Base list which will never be altered
+
+  List<Membership> _activeMemberships = [];
   String _searchText = '';
   int _currentMonthIncome = 0;
 
@@ -25,15 +29,21 @@ class MemberProvider with ChangeNotifier {
 
   String _selectedMembershipPeriod = 'All';
   String _selectedPlanStatus = 'Active';
+
   // Getter Functions:
   bool get loading => _loading;
   List<MemberModel> get members => _members;
   List<MemberModel> get mainList => _mainList;
+  List<Membership> get activeMemberships => _activeMemberships;
+
   List<String> get planStatus => _planStatus;
   List<String> get membershipPeriod => _membershipPeriod;
+
   String get selectedPlanStatus => _selectedPlanStatus;
   String get selectedMembershipPeriod => _selectedMembershipPeriod;
+
   int get currentMonthIncome => _currentMonthIncome;
+// -----------------------------------------------------------------------------------------
 
   // Function to sort member list by daysRemaining in ascending order
   List<MemberModel> sortByDayRemaining(List<MemberModel> memberList) {
@@ -167,5 +177,12 @@ class MemberProvider with ChangeNotifier {
 
       notifyListeners();
     }
+  }
+
+  Future setMemberships() async {
+    List<Membership> fetchedMemberships =
+        await ApiServiceMembership().fetchActiveMemberships();
+    _activeMemberships = fetchedMemberships;
+    notifyListeners();
   }
 }

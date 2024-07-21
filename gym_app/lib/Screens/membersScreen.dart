@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gym_app/components/member_tile.dart';
 import 'package:gym_app/components/my_app_bar.dart';
+import 'package:gym_app/models/membership_model.dart';
 import 'package:gym_app/provider/memberProvider.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,6 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   void initState() {
     print("Inside M.S init");
-    // context.read<MemberProvider>().filterMembers();
     super.initState();
   }
 
@@ -102,8 +102,7 @@ class _MembersScreenState extends State<MembersScreen> {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
-                            // Display dropdown button here
-
+                            // membership dropdown
                             SizedBox(
                               width: 110,
                               child: DropdownButtonFormField(
@@ -147,7 +146,7 @@ class _MembersScreenState extends State<MembersScreen> {
                             const SizedBox(
                               width: 20,
                             ),
-                            // Exprired members DD
+                            // STATUS DD
                             SizedBox(
                               width: 115,
                               child: DropdownButtonFormField(
@@ -230,8 +229,21 @@ class _MembersScreenState extends State<MembersScreen> {
                       child: ListView.builder(
                         itemCount: memberprovider.members.length,
                         itemBuilder: (context, index) {
+                          final member = memberprovider.members[index];
+                          Membership? membership;
+
+                          try {
+                            membership =
+                                memberprovider.activeMemberships.firstWhere(
+                              (activeMembership) =>
+                                  activeMembership.memberId == member.id,
+                            );
+                          } catch (e) {
+                            membership = null;
+                          }
                           return MemberTile(
-                            obj: memberprovider.members[index],
+                            obj: member,
+                            membership: membership,
                           );
                         },
                       ),

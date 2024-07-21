@@ -33,14 +33,15 @@ const memberSchema = new Schema(
     phone_num: Number,
     gender: String,
     medicalIssue: String,
-    membership_Period: Number,
     profile_img: String,
-    actual_amount: Number,
-    paid_amount: Number,
     joinOn: {
       type: Date,
       default: Date(),
     },
+
+    membership_Period: Number,
+    actual_amount: Number,
+    paid_amount: Number,
     due_amount: {
       type: Number,
       default: function () {

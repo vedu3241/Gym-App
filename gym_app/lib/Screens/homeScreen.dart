@@ -15,6 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     context.read<MemberProvider>().setMembers();
+    context.read<MemberProvider>().setMemberships();
     context.read<MemberProvider>().getCurrentMonthIncome();
     super.initState();
   }
