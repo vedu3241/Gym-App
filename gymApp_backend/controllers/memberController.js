@@ -185,12 +185,9 @@ function memberController() {
           result = await Membership.updateOne(filter, update);
 
           if (result.modifiedCount > 0) {
-            console.log("renew stage 1 ");
+            console.log("RENEW- old membership updated");
           } else {
-            // return res.status(404).json({
-            //   message: "Error updating prev due in renewal ",
-            // });
-            console.log("renew stage 1 failed!!!");
+            console.log("RENEW- failed to update old membership");
           }
         }
 
@@ -205,7 +202,7 @@ function memberController() {
         newMembership
           .save()
           .then(() => {
-            console.log("added new membership");
+            console.log("Membership updated");
           })
           .catch((err) => {
             console.log(err);
@@ -241,14 +238,14 @@ function memberController() {
     async updateMemberDue(req, res) {
       try {
         const { paidDue, due, memberId } = req.body;
-        console.log("memberid: " + memberId);
-        console.log("paidDue: " + paidDue);
-        console.log("due: " + due);
+        // console.log("memberid: " + memberId);
+        // console.log("paidDue: " + paidDue);
+        // console.log("due: " + due);
 
         //UPDATING INCOME
         updateIncome(parseInt(paidDue));
         const remainingDue = due - paidDue;
-        console.log("remaining due: " + remainingDue);
+        // console.log("remaining due: " + remainingDue);
         const filter = { memberId: memberId, dueAmount: due };
         const update = {
           $inc: { paidAmount: paidDue },
@@ -256,7 +253,7 @@ function memberController() {
         };
 
         result = await Membership.updateOne(filter, update);
-        console.log(result);
+        // console.log(result);
         if (result.modifiedCount > 0) {
           console.log("Due updated");
           return res.status(200).json({

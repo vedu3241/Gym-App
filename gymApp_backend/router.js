@@ -22,5 +22,9 @@ router.post("/deletePlan", membershipController().deletePlan);
 //Memberships
 router.get("/activeMemberships", membershipController().getActiveMemberships);
 router.get("/membershipHistory", membershipController().getMembershipHistory);
+router.get(
+  "/recent-membership",
+  membershipController().getMostRecentMembership
+);
 
 module.exports = router;

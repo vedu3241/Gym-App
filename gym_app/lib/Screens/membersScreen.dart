@@ -199,6 +199,7 @@ class _MembersScreenState extends State<MembersScreen> {
               ),
               memberprovider.loading
                   ? const CircularProgressIndicator()
+                  //MEMBER COUNT
                   : Align(
                       alignment: Alignment.centerLeft,
                       child: Padding(
@@ -233,11 +234,9 @@ class _MembersScreenState extends State<MembersScreen> {
                           Membership? membership;
 
                           try {
-                            membership =
-                                memberprovider.activeMemberships.firstWhere(
-                              (activeMembership) =>
-                                  activeMembership.memberId == member.id,
-                            );
+                            membership = memberprovider.activeMemberships
+                                .firstWhere((activeMembership) =>
+                                    activeMembership.memberId == member.id);
                           } catch (e) {
                             membership = null;
                           }

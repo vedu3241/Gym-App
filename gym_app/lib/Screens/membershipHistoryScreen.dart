@@ -5,19 +5,20 @@ import 'dart:convert';
 
 import 'package:intl/intl.dart';
 
+// ignore: must_be_immutable
 class MembershipHistoryScreen extends StatelessWidget {
   MembershipHistoryScreen({super.key, required this.memberId});
   String memberId;
 
-  Future<List<dynamic>> fetchMembershipHistory() async {
-    final response = await http
-        .get(Uri.parse('http://your-node-server-url/api/membership/history'));
-    if (response.statusCode == 200) {
-      return json.decode(response.body)['history'];
-    } else {
-      throw Exception('Failed to load membership history');
-    }
-  }
+  // Future<List<dynamic>> fetchMembershipHistory() async {
+  //   final response = await http
+  //       .get(Uri.parse('http://your-node-server-url/api/membership/history'));
+  //   if (response.statusCode == 200) {
+  //     return json.decode(response.body)['history'];
+  //   } else {
+  //     throw Exception('Failed to load membership history');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

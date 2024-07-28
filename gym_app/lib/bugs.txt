@@ -12,3 +12,9 @@ Functionality  BUGS{
     On member remove - remove their memberships as well
 
 }
+
+
+features:
+user chart
+prepaid plans
+compress images

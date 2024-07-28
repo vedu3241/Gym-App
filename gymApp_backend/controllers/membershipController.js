@@ -99,13 +99,40 @@ function membershipController() {
         console.log(err);
       }
     },
+
     async getMembershipHistory(req, res) {
       try {
         const id = req.query.memberId;
-        const data = await Membership.find({ memberId: id });
+        const data = await Membership.find({ memberId: id }).sort({
+          planStartDate: -1,
+        });
         res.status(200).json({ history: data });
       } catch (err) {
         console.log(err);
+      }
+    },
+
+    async getMostRecentMembership(req, res) {
+      const memberId = req.query.memberId;
+      console.log(memberId);
+      try {
+        // Sort by start date in descending order
+        await Membership.findOne({ memberId })
+          .sort({ planStartDate: -1 })
+          .then((mostRecentMembership) => {
+            if (!mostRecentMembership) {
+              return res
+                .status(404)
+                .json({ message: "No memberships found for this member." });
+            }
+            res.status(200).json({ recentMembership: mostRecentMembership });
+          })
+          .catch((error) => {
+            res.status(500).json({ message: error.message });
+          });
+      } catch (error) {
+        console.error("Error fetching recent membership:", error);
+        throw error;
       }
     },
   };

@@ -19,7 +19,9 @@ class MemberProvider with ChangeNotifier {
       []; // List which will be provided to display after applying filter options
   List<MemberModel> _mainList = []; //Base list which will never be altered
 
-  List<Membership> _activeMemberships = [];
+  List<Membership> _activeMemberships =
+      []; //this list contains only active memberships of all members
+
   String _searchText = '';
   int _currentMonthIncome = 0;
 
@@ -91,6 +93,15 @@ class MemberProvider with ChangeNotifier {
   }
 
 // FUNCTIONS FOR HANDLING SEARCH AND MEMBERSHIP MONTH FILTER ------------------------------
+
+  // List<MemberModel> filterMembersByMembershipPeriod(int membershipPeriod) {
+  //   return _activeMemberships
+  //       .where((membership) => membership.membershipPeriod == membershipPeriod)
+  //       .map((membership) =>
+  //           members.firstWhere((member) => member.id == membership.memberId))
+  //       .toList();
+  // }
+
   void updateSearchText(String newText) {
     _searchText = newText;
     // notifyListeners();
@@ -105,16 +116,19 @@ class MemberProvider with ChangeNotifier {
     // print(_mainList);
     List<MemberModel> searchResult = _mainList;
 
+    //if package sort is selected
     if (_selectedMembershipPeriod.isNotEmpty) {
-      // print(selectedMembershipPeriod);
+      //if selected is all
       if (_selectedMembershipPeriod == "All") {
-        print("inside all");
         searchResult = sortByDayRemaining(_mainList);
       } else {
-        searchResult = searchResult
-            .where((element) => element.membershipPeriod
-                .toString()
-                .contains(_selectedMembershipPeriod))
+        searchResult = _activeMemberships
+            .where((membership) =>
+                membership.membershipPeriod.toString() ==
+                _selectedMembershipPeriod)
+            .map((membership) => _mainList.firstWhere(
+                  (member) => member.id == membership.memberId,
+                ))
             .toList();
       }
     }
@@ -146,6 +160,7 @@ class MemberProvider with ChangeNotifier {
 
   void displayMembersByStatus(String status) {
     List<MemberModel> result = [];
+
     if (status == 'Active') {
       result = _mainList.where((element) => element.expired == false).toList();
     } else if (status == 'Expired') {

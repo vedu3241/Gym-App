@@ -50,4 +50,14 @@ class ApiServiceMembership {
       throw Exception('Failed to load membership history');
     }
   }
+
+  Future<Membership> getMostRecentMembership(String id) async {
+    Response res =
+        await http.get(Uri.parse('$baseUrl/recent-membership?memberId=$id'));
+    final responseData = jsonDecode(res.body);
+    final jsonMembership = responseData['recentMembership'];
+    Membership recentMembership = Membership.fromJson(jsonMembership);
+    print(recentMembership);
+    return recentMembership;
+  }
 }

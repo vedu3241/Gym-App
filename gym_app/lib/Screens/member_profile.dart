@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:gym_app/API_services/api_service.dart';
 import 'package:gym_app/Screens/membershipHistoryScreen.dart';
@@ -15,11 +16,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// ignore: must_be_immutable
 class MemberProfile extends StatelessWidget {
   MemberProfile({super.key, required this.userId});
 
-  String userId;
+  final String userId;
 
   // Text Controllers
   final TextEditingController _paidDueController = TextEditingController();
@@ -35,38 +35,30 @@ class MemberProfile extends StatelessWidget {
 
   _callUser(String phoneNumber) async {
     try {
-      // Uri dialnumber = Uri(scheme: 'tel', path: phoneNumber);
       await FlutterPhoneDirectCaller.callNumber(phoneNumber);
     } catch (err) {
       print("Error in Call: " + err.toString());
     }
   }
 
-  //open whatsapp with pre-define text
-  _openWhatsapp(
-      String phoneNumber, MemberModel member, Membership membership) async {
+  _openWhatsapp(String phoneNumber, MemberModel member) async {
     try {
       String reminderText =
-          "Hello ${member.firstName}! We wanted to remind you that your gym membership is set to expire on ${formattedDate(membership.planExpiryDate!)}.\n\nWe truly value your dedication and commitment to your fitness journey with us.\n\nIf you have any questions or wish to renew your membership, please don't hesitate to reach out to us. We look forward to continuing to support you in achieving your fitness goals.\n\nRegards- S.K Fitness";
+          "Hello ${member.firstName}! We wanted to remind you that your gym membership is expired.\nWe truly value your dedication and commitment to your fitness journey with us.\n\nIf you have any questions or wish to renew your membership, please don't hesitate to reach out to us. We look forward to continuing to support you in achieving your fitness goals.\n\nRegards- S.K Fitness";
 
       String url =
           'https://wa.me/$phoneNumber/?text=${Uri.encodeComponent(reminderText)}';
-      Uri uri = Uri.parse(url); // Parse the url string to create a Uri object
+      Uri uri = Uri.parse(url);
       await launchUrl(uri);
     } catch (err) {
       print('Error launching WhatsApp: $err');
     }
   }
 
-  void _sendSms() {
-    // String recipientNumber = user.phoneNum.toString();
-    // String messageBody = "Your membership is been expired";
-    // SmsSender sender = SmsSender();
-    // String address = recipientNumber;
-    // sender.sendSms(SmsMessage(address, messageBody));
-  }
+  // void _sendSms() {
+  //   // Implement SMS sending functionality
+  // }
 
-  //remove member
   void removeMember(BuildContext context, String id) {
     showDialog(
       context: context,
@@ -98,7 +90,6 @@ class MemberProfile extends StatelessWidget {
     );
   }
 
-  //update member's Due amount
   void updateMemberDue(
       BuildContext context, MemberModel member, Membership membership) {
     showDialog(
@@ -112,9 +103,7 @@ class MemberProfile extends StatelessWidget {
           backgroundColor: Colors.white,
           content: Form(
             child: Column(
-              mainAxisSize: MainAxisSize
-                  .min, // Ensures the AlertDialog takes only the space it needs
-
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(
@@ -154,10 +143,8 @@ class MemberProfile extends StatelessWidget {
                         Radius.circular(10),
                       ),
                     ),
-                    // hintText: "First Name",
                   ),
                 ),
-                // Save button
                 const SizedBox(
                   height: 20,
                 ),
@@ -172,10 +159,7 @@ class MemberProfile extends StatelessWidget {
                     _paidDueController.text, membership.dueAmount!, member.id!);
                 if (res.statusCode == 200) {
                   var jsonResponse = jsonDecode(res.body);
-                  // Provider.of<MemberProvider>(context, listen: false)
-                  //     .setMembers();
                   context.read<MemberProvider>().setMemberships();
-                  //clearing controller
                   _paidDueController.clear();
                   print(jsonResponse['message']);
                 }
@@ -196,38 +180,265 @@ class MemberProfile extends StatelessWidget {
   String formattedDate(DateTime dateString) {
     DateTime dateTime = DateTime.parse(dateString.toString());
     final DateFormat formatter = DateFormat('dd-MM-yyyy');
-    // Format the date
     return formatter.format(dateTime);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const MyAppBar(
-          text: "Profile",
-        ),
-        backgroundColor: Colors.grey[200],
-        body: Consumer<MemberProvider>(
-          builder: (context, memberProvider, child) {
-            // fetching member from provider by using ID
-            final member = memberProvider.members.firstWhere(
-              (member) => member.id == userId,
-              orElse: () => MemberModel(id: '', firstName: 'Not Found'),
-            );
+      appBar: const MyAppBar(
+        text: "Profile",
+      ),
+      backgroundColor: Colors.grey[200],
+      body: Consumer<MemberProvider>(
+        builder: (context, memberProvider, child) {
+          final member = memberProvider.members.firstWhere(
+            (member) => member.id == userId,
+            orElse: () => MemberModel(id: '', firstName: 'Not Found'),
+          );
 
-            if (member.id!.isEmpty) {
-              return const Center(child: Text('Member not found'));
-            }
+          if (member.id!.isEmpty) {
+            return const Center(child: Text('Member not found'));
+          }
 
-            final membership = memberProvider.activeMemberships.firstWhere(
-              (element) => element.memberId == userId,
-            );
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    // Profile Container
+          Membership? membership;
+
+          try {
+            membership = memberProvider.activeMemberships.firstWhere(
+                (activeMembership) => activeMembership.memberId == member.id);
+          } catch (e) {
+            membership = null;
+          }
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 15),
+                    child: Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            InstaImageViewer(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  'http://192.168.0.103:6666/public/profile_img/${member.profileImg}',
+                                  width: 90,
+                                  height: 90,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(member.firstName!,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600)),
+                                Text(member.phoneNum!.toString()),
+                                const SizedBox(height: 10),
+                                Text("Medical Issue",
+                                    style: TextStyle(color: Colors.grey[500])),
+                                Text(member.medicalIssue!,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                            const SizedBox(width: 20),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Gender",
+                                    style: TextStyle(color: Colors.grey[500])),
+                                const Text("Male",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 10),
+                                Text("Batch Name",
+                                    style: TextStyle(color: Colors.grey[500])),
+                                const Text("Morning",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w500)),
+                              ],
+                            )
+                          ],
+                        ),
+                        Container(
+                          height: 1.5,
+                          width: 300,
+                          margin: const EdgeInsets.symmetric(vertical: 20),
+                          color: Colors.grey[300],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            // Call button
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    content: const Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SizedBox(
+                                          height: 30,
+                                        ),
+                                        Text(
+                                          "Are you sure you want to make this call?",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text(
+                                              "Cancel",
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+                                              await _callUser(
+                                                  member.phoneNum.toString());
+                                            },
+                                            child: const Text("OK"),
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: const Column(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.green,
+                                    radius: 18,
+                                    child: Icon(Icons.phone,
+                                        color: Colors.white, size: 20),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Call",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            ),
+                            //WHATSAPP BUTTON
+                            GestureDetector(
+                              onTap: () {
+                                _openWhatsapp(
+                                    member.phoneNum.toString(), member);
+                              },
+                              child: Column(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.green,
+                                    radius: 18,
+                                    child: Image.asset(
+                                      'assets/member_profile/whatsapp.png',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  const Text(
+                                    "Whatsapp",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            ),
+                            //SMS BUTTON
+                            // GestureDetector(
+                            //   onTap: _sendSms,
+                            //   child: const Column(
+                            //     children: [
+                            //       CircleAvatar(
+                            //         backgroundColor: Colors.blue,
+                            //         radius: 18,
+                            //         child: Icon(Icons.sms,
+                            //             color: Colors.white, size: 20),
+                            //       ),
+                            //       SizedBox(height: 5),
+                            //       Text(
+                            //         "SMS",
+                            //         style: TextStyle(
+                            //             fontWeight: FontWeight.w500,
+                            //             color: Colors.black),
+                            //       )
+                            //     ],
+                            //   ),
+                            // ),
+
+                            //remove member
+                            GestureDetector(
+                              onTap: () {
+                                removeMember(context, userId);
+                              },
+                              child: const Column(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.red,
+                                    radius: 18,
+                                    child: Icon(Icons.delete,
+                                        color: Colors.white, size: 20),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Delete",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Padding(
+                  //   padding: EdgeInsets.only(top: 20),
+                  //   child: Align(
+                  //     alignment: Alignment.topLeft,
+                  //     child: Text(
+                  //       "Membership",
+                  //       style: TextStyle(
+                  //           color: Colors.grey[500],
+                  //           fontSize: 18,
+                  //           fontWeight: FontWeight.bold),
+                  //     ),
+                  //   ),
+                  // ),
+                  if (membership != null)
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -236,267 +447,195 @@ class MemberProfile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 15, vertical: 15),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Info Card
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              InstaImageViewer(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    'http://192.168.0.103:6666/public/profile_img/${member.profileImg}',
-                                    width: 90,
-                                    height: 90,
-                                  ),
-                                ),
+                              const Text(
+                                "Active Plan",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 16),
                               ),
-                              const SizedBox(width: 20),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(member.firstName!,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600)),
-                                  Text(member.phoneNum!.toString()),
-                                  const SizedBox(height: 10),
-                                  Text("Medical Issue",
-                                      style:
-                                          TextStyle(color: Colors.grey[500])),
-                                  Text(member.medicalIssue!,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w500)),
-                                ],
-                              ),
-                              const SizedBox(width: 20),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Gender",
-                                      style:
-                                          TextStyle(color: Colors.grey[500])),
-                                  const Text("Male",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w500)),
-                                  const SizedBox(height: 10),
-                                  Text("Batch Name",
-                                      style:
-                                          TextStyle(color: Colors.grey[500])),
-                                  const Text("Morning",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w500)),
-                                ],
+                              Text(
+                                "₹ ${membership.membershipAmount}",
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 16),
                               )
                             ],
                           ),
-                          // Horizontal Divider line
-                          Container(
-                            height: 1.5,
-                            width: 300,
-                            margin: const EdgeInsets.symmetric(vertical: 20),
-                            color: Colors.grey[300],
-                          ),
-                          // Contact Icons
+                          const SizedBox(height: 15),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              //Call button
+                              const Text("Start Date",
+                                  style: TextStyle(color: Colors.grey)),
+                              Text(
+                                formattedDate(membership.planStartDate!),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("End Date",
+                                  style: TextStyle(color: Colors.grey)),
+                              Text(
+                                formattedDate(membership.planExpiryDate!),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Paid Amount",
+                                  style: TextStyle(color: Colors.grey)),
+                              Text(
+                                membership.paidAmount.toString(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Due Amount",
+                                  style: TextStyle(color: Colors.grey)),
+                              Text(
+                                membership.dueAmount.toString(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Status",
+                                  style: TextStyle(color: Colors.grey)),
+                              Text("Active",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.green)),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              membership.dueAmount! > 0
+                                  ? GestureDetector(
+                                      onTap: () {
+                                        updateMemberDue(
+                                            context, member, membership!);
+                                      },
+                                      child: const Text("Pay Due",
+                                          style: TextStyle(
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.w500)),
+                                    )
+                                  : const SizedBox(),
                               GestureDetector(
                                 onTap: () {
-                                  // _launchDialPad(user.phoneNumber);
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      content: const Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(
-                                            height: 30,
-                                          ),
-                                          Text(
-                                            "Are you sure you want to make this call?",
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        ],
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          RenewMembershipScreen(
+                                        userId: userId,
+                                        member: member,
                                       ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            _callUser(
-                                                member.phoneNum!.toString());
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text("Yes"),
-                                        )
-                                      ],
                                     ),
                                   );
                                 },
-                                child: Image.asset(
-                                  'assets/member_profile/phone-call.png',
-                                  height: 40,
-                                  width: 40,
-                                ),
-                              ),
-                              //whatsapp
-                              InkWell(
-                                onTap: () async {
-                                  _openWhatsapp(member.phoneNum!.toString(),
-                                      member, membership);
-                                },
-                                child: Image.asset(
-                                  'assets/member_profile/whatsapp.png',
-                                  height: 40,
-                                  width: 40,
-                                ),
-                              ),
-                              //sms
-                              InkWell(
-                                onTap: () {
-                                  _sendSms();
-                                },
-                                child: Image.asset(
-                                  'assets/member_profile/sms.png',
-                                  height: 40,
-                                  width: 40,
-                                ),
-                              )
-                            ],
-                          ),
-                          const SizedBox(height: 25),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              //Extra ICON
-                              //To renew due paid in between the on going membership
-                              InkWell(
-                                onTap: () {
-                                  updateMemberDue(context, member, membership);
-                                },
-                                child: Image.asset(
-                                  'assets/member_profile/attendance.png',
-                                  height: 40,
-                                  width: 40,
-                                ),
-                              ),
-                              //Renew Membership
-                              InkWell(
-                                onTap: () {
-                                  // print(user.id);
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => RenewMembershipScreen(
-                                      member: member,
-                                    ),
-                                  ));
-                                },
-                                child: Image.asset(
-                                  'assets/member_profile/renew.png',
-                                  height: 40,
-                                  width: 40,
-                                ),
-                              ),
-                              //Remove Member
-                              InkWell(
-                                onTap: () {
-                                  print("remove tapped");
-                                  removeMember(context, member.id!);
-                                },
-                                child: Image.asset(
-                                  'assets/member_profile/block.png',
-                                  height: 40,
-                                  width: 40,
-                                ),
+                                child: const Text("Renew Plan",
+                                    style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w500)),
                               )
                             ],
                           )
                         ],
                       ),
-                    ),
-                    // Text - Membership
-                    const SizedBox(height: 20),
-                    const Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(
-                        "Active Membership Details",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Packages Container
+                    )
+                  else
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          vertical: 20, horizontal: 10),
+                          horizontal: 15, vertical: 40),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "${membership.membershipPeriod} month plan",
-                            style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Color.fromARGB(255, 227, 173, 10)),
+                          const Center(
+                            child: Text(
+                              "No active membership found.",
+                              style: TextStyle(color: Colors.red, fontSize: 18),
+                            ),
                           ),
-                          Row(
-                            children: [
-                              // Col 1
-                              _PackageColumn(
-                                label1: "Total Amount",
-                                value1: membership.membershipAmount.toString(),
-                                label2: "Paid",
-                                value2: membership.paidAmount.toString(),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RenewMembershipScreen(
+                                      member: member, userId: userId),
+                                ),
+                              );
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                "Renew Plan",
+                                style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.w500),
                               ),
-                              const SizedBox(width: 20),
-                              // Col 2
-                              _PackageColumn(
-                                label1: "Discount",
-                                value1: "0",
-                                label2: "Due amount",
-                                value2: membership.dueAmount.toString(),
-                              ),
-                              const SizedBox(width: 20),
-                              // Col 3
-                              _PackageColumn(
-                                label1: "Purchase Date",
-                                value1:
-                                    formattedDate(membership.planStartDate!),
-                                label2: "Expiry Date",
-                                value2:
-                                    formattedDate(membership.planExpiryDate!),
-                              ),
-                            ],
+                            ),
                           )
                         ],
                       ),
                     ),
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  MembershipHistoryScreen(memberId: userId),
-                            ));
-                      },
-                      child: const Align(
-                        alignment: Alignment.topLeft,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Row(
+                  const SizedBox(height: 20),
+
+                  //HISTORY
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MembershipHistoryScreen(
+                            memberId: member.id!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
                             children: [
                               Text(
-                                "History",
+                                "View Membership History",
                                 style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                    fontSize: 16, fontWeight: FontWeight.w500),
                               ),
                               SizedBox(
                                 width: 5,
@@ -504,55 +643,17 @@ class MemberProfile extends StatelessWidget {
                               Icon(Icons.history),
                             ],
                           ),
-                        ),
+                          Icon(Icons.chevron_right)
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  )
+                ],
               ),
-            );
-          },
-        ));
-  }
-}
-
-class _PackageColumn extends StatelessWidget {
-  const _PackageColumn({
-    required this.label1,
-    required this.value1,
-    required this.label2,
-    required this.value2,
-  });
-
-  final String label1;
-  final String value1;
-  final String label2;
-  final String value2;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label1,
-          style: TextStyle(color: Colors.grey[500]),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          value1,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          label2,
-          style: TextStyle(color: Colors.grey[500]),
-        ),
-        Text(
-          value2,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        )
-      ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
